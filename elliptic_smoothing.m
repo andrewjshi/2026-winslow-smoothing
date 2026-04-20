@@ -23,7 +23,7 @@ bnd=[e,newp(e,:); c,newp(c,:)];
 bnd=[e,newp(e,:)];
 
 u=W*reshape(permute(msh.p1,[1,3,2]),[],size(msh.p1,2));
-for iter=1:30
+for iter=1:100
   uold=u;
   u=sm1(msh,data,u,bnd);
   uerror=norm(u(:)-uold(:));
