@@ -1,0 +1,96 @@
+function data=qdginit(msh,pars)
+%QDGINIT  Initialize DG data structures (any dimension)
+%
+%    Syntax: data=qdginit(msh)
+%
+%    msh:   mesh structure
+%    data:  data structure
+
+if nargin<2, pars=struct; end
+if ~isfield(pars,'gaussfac'), pars.gaussfac=3; end
+if ~isfield(pars,'gaussadds'), pars.gaussadds=false; end
+
+porder=double(msh.porder);
+s0=msh.s0;
+ns=size(s0,1);
+sw=gaussweights(2*s0-1)/2;
+
+[PHI,PHIx]=plegendre(2*s0-1,porder);
+PHIx=PHIx*2;
+[gx,gw]=gaussquad(max(3*porder,1)); gx=(gx+1)/2; gw=gw/2;
+[gN,gNx]=plegendre(2*gx-1,porder);
+gNx=gNx*2;
+Nx=PHIx/PHI;
+gN=gN/PHI;
+gNx=gNx/PHI;
+gwN=diag(gw)*gN;
+gwNx=diag(gw)*gNx;
+
+ng=size(gN,1);
+gNN=reshape(permute(reshape(gN(:)*gN(:)',[ng,ns,ng,ns]),[1,3,2,4]),[ng^2,ns^2]);
+gNNx=reshape(permute(reshape(gNx(:)*gN(:)',[ng,ns,ng,ns]),[1,3,2,4]),[ng^2,ns^2]);
+gNNy=reshape(permute(reshape(gN(:)*gNx(:)',[ng,ns,ng,ns]),[1,3,2,4]),[ng^2,ns^2]);
+gww=reshape(gw*gw',[],1);
+gwwNN=diag(gww)*gNN;
+gwwNNx=diag(gww)*gNNx;
+gwwNNy=diag(gww)*gNNy;
+MM=gwwNN'*gNN;
+
+lC=squeeze(sum(repmat(gw,[1,ns,ns]).*repmat(gN,[1,1,ns]).*repmat(permute(gN,[1,3,2]),[1,ns,1]),1));
+lM=squeeze(sum(repmat(gw,[1,ns,ns]).*repmat(gN,[1,1,ns]).*repmat(permute(gN,[1,3,2]),[1,ns,1]),1));
+lD=squeeze(sum(repmat(gw,[1,ns,ns]).*repmat(gNx,[1,1,ns]).*repmat(permute(gNx,[1,3,2]),[1,ns,1]),1));
+
+PH=diag([zeros(1,porder),1]);
+FH=PHI*PH*inv(PHI);
+MH=FH'*lM*FH;
+
+data.gx=gx;
+data.gw=gw;
+data.gN=gN;
+data.gNx=gNx;
+data.gwN=gwN;
+data.gwNx=gwNx;
+data.lD=lD;
+data.lM=lM;
+data.lMinv=inv(lM);
+data.lMinvgwNxT=lM\(gwNx');
+data.lMinvgwNxTgN=lM\(gwNx'*gN);
+data.MH=MH;
+data.V=PHI;
+data.Nx=Nx;
+data.porder=porder;
+data.s0=s0;
+data.sw=sw;
+
+data.gNN=gNN;
+data.gNNx=gNNx;
+data.gNNy=gNNy;
+data.gwwNN=gwwNN;
+data.gwwNNx=gwwNNx;
+data.gwwNNy=gwwNNy;
+data.MM=MM;
+
+% egix=zeros(nsbnd,0,'int32');
+% facemap=mkfacemap(dim);
+% for ii=1:dim+1
+%   ic=facemap(:,ii);
+%   [foo,ix]=ismember(round(porder*sbnd),round(porder*s(:,ic)),'rows');
+%   egix=[egix,int32(ix-1)];
+% end
+
+% permmap=zeros(nsbnd,0,'int32');
+% perms={1,[2,1],[1,3,2;2,1,3;3,2,1]};
+% permegix=zeros(nsbnd,dim+1,0,'int32');
+% for ii=1:size(perms{dim},1)
+%   perm=perms{dim}(ii,:);
+%   [foo,ix]=ismember(round(porder*sbnd),round(porder*sbnd(:,perm)),'rows');
+%   permmap=[permmap,int32(ix-1)];
+%   permegix=cat(3,permegix,egix(ix,:));
+% end
+
+% [KWP,KWPsizes,KWPegix]=mkKWprojections(dim,porder);
+
+% data=struct('gx',gx,'gw',gw,'gfs',gfs,'wgfs',wgfs,'lM0',lM0,'lM0R',lM0R,'lM0H',lM0H, ...
+%             'egx',egx,'egw',egw,'efs',efs,'wefs',wefs, ...
+%             'egix',egix,'permmap',permmap,'permegix',permegix, ...
+%             'KWP',KWP,'KWPsizes',KWPsizes,'KWPegix',KWPegix);
