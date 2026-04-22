@@ -3,6 +3,10 @@
 % ---------- packages ----------
 \usepackage[margin=1in]{geometry}
 \usepackage{graphicx}
+\graphicspath{%
+  {../demos/original-formulation/figures/}%
+  {../demos/w-formulation/figures/}%
+}
 \usepackage{amsmath, amssymb, bm}
 \usepackage{listings}
 \usepackage{xcolor}
@@ -87,21 +91,21 @@ The code \texttt{w2.m} does the following in Figure \ref{fig:w2}.
 \centering
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2/mesh_reference.png}
+  \includegraphics[width=\textwidth]{w2/mesh_reference.png}
   \caption{Reference mesh.}
   \label{fig:ref}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2/mesh_tangled.png}
+  \includegraphics[width=\textwidth]{w2/mesh_tangled.png}
   \caption{Initial configuration.}
   \label{fig:tangled}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2/mesh_smoothed.png}
+  \includegraphics[width=\textwidth]{w2/mesh_smoothed.png}
   \caption{After Winslow}
   \label{fig:smoothed}
 \end{subfigure}
@@ -114,8 +118,8 @@ deformation; all elements valid.}
 \label{fig:w2}
 \end{figure}
 
-It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d.m} in Figure \ref{fig:w2_3d}. To assess mesh quality we use
-the scaled Jacobian of Fortunato--Persson~\cite{fortunato2016high},
+To assess mesh quality we use the scaled Jacobian of
+Fortunato--Persson~\cite{fortunato2016high},
 \begin{equation}
   I \;=\; \frac{\min_{\xi \in \kappa} J(\xi)}{\max_{\xi \in \kappa} J(\xi)},
   \qquad I \leq 1,
@@ -124,28 +128,33 @@ the scaled Jacobian of Fortunato--Persson~\cite{fortunato2016high},
 approximated at the Gauss quadrature points of each element~$\kappa$.
 For a straight-sided simplex, $J$ is constant across $\kappa$ and
 $I = 1$ exactly; $I \leq 0$ indicates a degenerate or inverted element.
+
+\iffalse
+% ---- 3D test commented out; kept for later reference ---------------------
+It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d.m} in Figure \ref{fig:w2_3d}.
 Histograms for \texttt{w2\_3d.m} are given in Figure~\ref{fig:w2_3d_hist}.
+However, in practice we will not get to 3D yet.
 
 
 \begin{figure}[htbp]
 \centering
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2_3d/mesh_reference.png}
+  \includegraphics[width=\textwidth]{w2_3d/mesh_reference.png}
   \caption{Reference mesh.}
   \label{fig:ref-3d}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2_3d/mesh_tangled.png}
+  \includegraphics[width=\textwidth]{w2_3d/mesh_tangled.png}
   \caption{Initial configuration.}
   \label{fig:tangled-3d}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
-  \includegraphics[width=\textwidth]{figures/w2_3d/mesh_smoothed.png}
+  \includegraphics[width=\textwidth]{w2_3d/mesh_smoothed.png}
   \caption{After Winslow}
   \label{fig:smoothed-3d}
 \end{subfigure}
@@ -161,16 +170,16 @@ Histograms for \texttt{w2\_3d.m} are given in Figure~\ref{fig:w2_3d_hist}.
 \begin{figure}[htbp]
   \centering
   \subfloat[Reference\label{fig:hist-ref}]{%
-    \includegraphics[width=0.32\textwidth]{figures/w2_3d/hist_reference.png}}
+    \includegraphics[width=0.32\textwidth]{w2_3d/hist_reference.png}}
   \hfill
   \subfloat[Tangled\label{fig:hist-tangled}]{%
-    \includegraphics[width=0.32\textwidth]{figures/w2_3d/hist_tangled.png}}
+    \includegraphics[width=0.32\textwidth]{w2_3d/hist_tangled.png}}
   \hfill
   \subfloat[Smoothed\label{fig:hist-smoothed}]{%
-    \includegraphics[width=0.32\textwidth]{figures/w2_3d/hist_smoothed.png}}
+    \includegraphics[width=0.32\textwidth]{w2_3d/hist_smoothed.png}}
   \caption{Per-element scaled Jacobian $I = \min_{\xi} J(\xi) / \max_{\xi}
-  J(\xi)$
-  (Fortunato--Persson 2016, Sec.~4) for each configuration.
+  J(\xi)$ for each configuration in the 3D test shown in
+  Figure~\ref{fig:w2_3d}.
   (\subref{fig:hist-ref}) Reference: all elements straight-sided simplex,
   $I = 1$. (\subref{fig:hist-tangled}) Tangled: long negative tail with
   $\min I = -6.96$; boundary-adjacent elements inverted.
@@ -178,7 +187,123 @@ Histograms for \texttt{w2\_3d.m} are given in Figure~\ref{fig:w2_3d_hist}.
   $\min I \approx 0.70$ on elements bordering the indentation.}
   \label{fig:w2_3d_hist}
   \end{figure}
-  
+% ---- end of 3D block ----------------------------------------------------
+\fi
+
+To set up the main test case we will use throughout Section~1, we
+introduce \texttt{w2\_skewed.m}, a slight variation of \texttt{w2.m}
+in which a single interior linear vertex of the otherwise uniform
+$11 \times 11$ reference is moved toward a neighbour, creating a
+small patch of sliver elements in the upper-right of the reference.
+Everything else---the boundary perturbation on side~4, the polynomial
+order, the smoother itself---is identical to \texttt{w2.m}. The
+scaled Jacobian $I$ of~\eqref{eq:scaledJ} is blind to this regime:
+any simplex with straight edges has $I = 1$ regardless of aspect
+ratio, so it cannot ``see'' the sliver patch in the reference. To
+capture straight-sided shape distortion we also report the Liu--Joe
+inverse mean-ratio shape distortion
+metric~\cite{liu1994relationship,shi2023local},
+\begin{equation}
+  \eta \;=\; \frac{\|\J\|_F^2}{d \, |\det \J|^{2/d}},
+  \qquad \eta \in [1, \infty),
+  \label{eq:eta}
+\end{equation}
+with $\eta = 1$ for a conformal (ideal) element and $\eta \to \infty$
+as the element degenerates. The results are summarized in
+Figure~\ref{fig:w2_skewed} (meshes), Figure~\ref{fig:w2_skewed_hist_I}
+(scaled Jacobian distribution), and
+Figure~\ref{fig:w2_skewed_hist_eta} (shape distortion distribution).
+Unmodified Winslow produces a valid physical mesh, but the sliver
+cluster visible in the reference persists as the worst element in
+the smoothed output. This is exactly the behaviour the
+$W$-modification of Section~\ref{sec:W-mod} is designed to address,
+and the single-sliver \texttt{w2\_skewed} test is the setting in
+which we evaluate it.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{w2_skewed/mesh_reference.png}
+    \caption{Reference mesh.}
+    \label{fig:ref-skewed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{w2_skewed/mesh_tangled.png}
+    \caption{Initial configuration.}
+    \label{fig:tangled-skewed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{w2_skewed/mesh_smoothed.png}
+    \caption{After Winslow}
+    \label{fig:smoothed-skewed}
+  \end{subfigure}
+  \caption{Slight variation of \texttt{w2.m}: one interior vertex of
+  the $11 \times 11$ reference at $p=4$ is displaced toward a
+  neighbour, creating a sliver cluster.
+  (\subref{fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$.
+  (\subref{fig:tangled-skewed}) Boundary on side~4 displaced by
+  $0.5 \sin(\pi y)$, producing heavy tangling near the perturbed
+  edge on top of the reference-induced sliver.
+  (\subref{fig:smoothed-skewed}) After unmodified Winslow: elements
+  are valid, but the reference skew persists, with
+  $\max \eta = 7.17$ on the sliver in the upper-right.}
+  \label{fig:w2_skewed}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \subfloat[Reference\label{fig:hist-I-ref-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_I_reference.png}}
+  \hfill
+  \subfloat[Tangled\label{fig:hist-I-tangled-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_I_tangled.png}}
+  \hfill
+  \subfloat[Smoothed\label{fig:hist-I-smoothed-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_I_smoothed.png}}
+  \caption{Per-element scaled Jacobian
+  $I = \min_{\xi} J(\xi) / \max_{\xi} J(\xi)$ for the
+  \texttt{w2\_skewed} test.
+  (\subref{fig:hist-I-ref-skewed}) Reference: all elements
+  straight-sided simplex, so $I = 1$ identically---the metric is
+  blind to the sliver cluster present in the mesh.
+  (\subref{fig:hist-I-tangled-skewed}) Tangled: long negative tail,
+  $\min I = -12.2$. (\subref{fig:hist-I-smoothed-skewed}) Smoothed:
+  all $I > 0$, $\min I \approx 0.67$ on elements bordering the
+  indentation.}
+  \label{fig:w2_skewed_hist_I}
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \subfloat[Reference\label{fig:hist-eta-ref-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_eta_reference.png}}
+  \hfill
+  \subfloat[Tangled\label{fig:hist-eta-tangled-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_eta_tangled.png}}
+  \hfill
+  \subfloat[Smoothed\label{fig:hist-eta-smoothed-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{w2_skewed/hist_eta_smoothed.png}}
+  \caption{Per-element shape distortion metric
+  $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$~\cite{liu1994relationship,shi2023local}
+  for the \texttt{w2\_skewed} test. $\eta \in [1, \infty)$ with
+  $\eta = 1$ at conformal (ideal) elements; unlike $I$, $\eta$
+  detects straight-sided slivers.
+  (\subref{fig:hist-eta-ref-skewed}) Reference: $\max \eta = 4.63$,
+  mean $1.53$---the right tail is the sliver cluster around the
+  moved vertex.
+  (\subref{fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$.
+  (\subref{fig:hist-eta-smoothed-skewed}) Smoothed:
+  $\max \eta = 7.17$, mean $2.25$---the sliver cluster persists
+  as the worst element in the smoothed output, motivating the
+  $W$-modification in Section~\ref{sec:W-mod}.}
+  \label{fig:w2_skewed_hist_eta}
+\end{figure}
+
 
 \section{$W$ modification to achieve reference element shape}
 \label{sec:W-mod}
@@ -189,6 +314,9 @@ in the split-form system of Section~0 is built from the reference
 element geometry, so a skewed reference produces skewed physical
 elements. The $W$-modification below decouples the target shape from
 the reference element shape.
+\textbf{This is exactly the same formulation Persson gave me from his
+Gemini conversation
+(\href{run:persson_gemini_winslow.pdf}{persson\_gemini\_winslow.pdf}).}
 
 \subsection{Target metric}
 
@@ -285,16 +413,6 @@ align one principal direction of $W_h$ tangent to the boundary,
 leaving the magnitude prescribed by the local sizing. Details are
 deferred to the implementation section.
 
-\subsection{Effect on the Picard iteration}
-
-The assembly structure of the 2016 Picard iteration is preserved:
-the CG mass matrix in the $\tilde\alpha$ solve is unchanged, and the
-stiffness matrix in the $x$ solve is assembled from $\tilde g^{ij}$
-and $\tilde\alpha_j$ via the same routines as the unmodified case.
-The convergence rate, however, depends on spectral properties of the
-iteration operator, which change with $W$. We report iteration
-counts empirically in the results section.
-
 \subsection{Numerical Results/Tests}
 
 In order to test the effectiveness of this $W$:
@@ -303,108 +421,13 @@ In order to test the effectiveness of this $W$:
 	\item Implement $W$ modification. Check that this makes the physical mesh truly agnostic to the quality of the skewed (but for now, still valid/untangled) reference mesh. 
 \end{itemize}
 
-\texttt{w2.m} is reproduced but with some poorly shaped elements in
-the reference mesh. The code that does this is \texttt{w2\_skewed.m}. 
-The results are in Figure \ref{fig:w2_skewed}. \\
-
-
-The scaled Jacobian~\eqref{eq:scaledJ} is blind to this regime: any
-simplex with straight edges has $I = 1$ regardless of aspect ratio.
-To capture straight-sided shape distortion we additionally report the
-Liu--Joe inverse mean-ratio shape distortion
-metric~\cite{liu1994relationship,shi2023local},
-\begin{equation}
-  \eta \;=\; \frac{\|\J\|_F^2}{d \, |\det \J|^{2/d}},
-  \qquad \eta \in [1, \infty),
-  \label{eq:eta}
-\end{equation}
-with $\eta = 1$ for a conformal (ideal) element and $\eta \to \infty$
-as the element degenerates. The scaled Jacobian distribution is given
-in Figure~\ref{fig:w2_skewed_hist_I} and the shape distortion
-distribution in Figure~\ref{fig:w2_skewed_hist_eta}.
-
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_reference.png}
-    \caption{Reference mesh.}
-    \label{fig:ref-skewed}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_tangled.png}
-    \caption{Initial configuration.}
-    \label{fig:tangled-skewed}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.32\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_smoothed.png}
-    \caption{After Winslow}
-    \label{fig:smoothed-skewed}
-  \end{subfigure}
-  \caption{Baseline test: structured $11 \times 11$ mesh at $p = 4$ with
-  one interior vertex manually displaced toward a neighbor to create
-  a single sliver cluster in the upper-right.
-  (\subref{fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$.
-  (\subref{fig:tangled-skewed}) Boundary on side~4 displaced by
-  $0.5 \sin(\pi y)$, producing heavy tangling near the perturbed edge on
-  top of the reference-induced sliver. (\subref{fig:smoothed-skewed})
-  After unmodified Winslow: elements valid, but reference skew persists,
-  with $\max \eta = 7.17$ on the sliver in the upper-right.}
-  \label{fig:w2_skewed}
-  \end{figure}
-
-  \begin{figure}[htbp]
-  \centering
-  \subfloat[Reference\label{fig:hist-I-ref-skewed}]{%
-    \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_reference.png}}
-  \hfill
-  \subfloat[Tangled\label{fig:hist-I-tangled-skewed}]{%
-
-  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_tangled.png}}
-  \hfill
-  \subfloat[Smoothed\label{fig:hist-I-smoothed-skewed}]{%
-
-  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_smoothed.png}}
-  \caption{Per-element scaled Jacobian
-  $I = \min_{\xi} J(\xi) / \max_{\xi} J(\xi)$ (Fortunato--Persson 2016,
-  Sec.~4). (\subref{fig:hist-I-ref-skewed}) Reference: all elements
-  straight-sided simplex, so $I = 1$ identically---the metric is blind to
-  the sliver clusters present in the mesh.
-  (\subref{fig:hist-I-tangled-skewed}) Tangled: long negative tail,
-  $\min I = -12.2$. (\subref{fig:hist-I-smoothed-skewed}) Smoothed: all
-  $I > 0$, $\min I \approx 0.67$ on elements bordering the indentation.}
-  \label{fig:w2_skewed_hist_I}
-  \end{figure}
-
-  \begin{figure}[htbp]
-  \centering
-  \subfloat[Reference\label{fig:hist-eta-ref-skewed}]{%
-    \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_reference.png}}
-  \hfill
-  \subfloat[Tangled\label{fig:hist-eta-tangled-skewed}]{%
-
-  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_tangled.png}}
-  \hfill
-  \subfloat[Smoothed\label{fig:hist-eta-smoothed-skewed}]{%
-
-  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_smoothed.png}}
-  \caption{Per-element shape distortion metric
-  $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$~\cite{liu1994relationship,shi2023local}
-  for each configuration. $\eta \in [1, \infty)$ with $\eta = 1$ at
-  conformal (ideal) elements; unlike $I$, $\eta$ detects straight-sided
-  slivers. (\subref{fig:hist-eta-ref-skewed}) Reference:
-  $\max \eta = 4.63$, mean $1.53$---the right tail corresponds to the
-  sliver cluster around the moved vertex.
-  (\subref{fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$.
-  (\subref{fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$,
-  mean $2.25$---the sliver cluster persists as the worst element in
-  the smoothed output, motivating the $W$-modification in Section~1.}
-  \label{fig:w2_skewed_hist_eta}
-  \end{figure}
+Our main test is the \texttt{w2\_skewed} configuration introduced in
+Section~0.1 (Figure~\ref{fig:w2_skewed} and the associated quality
+histograms): a structured $11 \times 11$ reference with a single
+displaced interior vertex. Unmodified Fortunato--Persson produces a
+valid physical mesh that nonetheless inherits the reference's sliver
+cluster as its worst element. In what follows we assess how the
+$W$-modification modifies this outcome.
 
 \subsection{Numerical experiments with the $W$-modification (negative result)}
 \label{sec:W-experiments}
