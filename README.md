@@ -1,9 +1,9 @@
-Experiments attempting extending the Winslow high-order mesh smoother of
+Experiments attempting to extend the Winslow high-order mesh smoother of
 Fortunato & Persson (*JCP* 2016) with a `W`-modification intended to
 decouple the smoothed physical mesh from the shape of the reference
 (computational) mesh.
 
-## `w1.m`, `w2.m`, `w2_3d.m`, `w2_skewed.m` — the original Fortunato–Persson paradigm
+## `w1.m`, `w2.m` (and `w2_3d.m`, `w2_skewed.m`) — the original Fortunato–Persson paradigm
 
 - `init.m` — sets the MATLAB path; run before any demo.
 - `elliptic_smoothing.m` — the 2016 Fortunato–Persson Winslow smoother
@@ -40,22 +40,6 @@ elements valid). This is the canonical
 reference-mesh-is-good / physical-mesh-starts-tangled test and is the
 starting point for all the subsequent experiments in this repo.
 
-### `w2_3d.m` — 3D analogue of `w2.m`
-
-Same paradigm in three dimensions. Reference is a structured
-tetrahedral mesh of the unit cube (`mshcube(n+1, n+1, n+1)` with
-`n = 6`, giving a `7 × 7 × 7` vertex grid and 1296 tets) at
-`porder = 4`. The boundary on side~1 (`x = 0`) is displaced inward
-by `0.4 * sin(π y) * sin(π z)`, producing a severely tangled initial
-configuration near that face (`min I ≈ -7`, where `I` is the scaled
-Jacobian of Fortunato–Persson). After the Winslow iteration all
-elements are valid (`min I ≈ +0.7`). The script saves three mesh
-views to `demos/original-formulation/figures/w2_3d/` (reference, tangled, smoothed), all
-rendered from a viewpoint that shows the perturbed `x = 0` face,
-along with three per-element scaled-Jacobian histograms (one per
-configuration) demonstrating that the negative tail of `I` in the
-tangled mesh is eliminated after smoothing.
-
 ### `w2_skewed.m` — `w2.m` with a slightly skewed reference
 
 A minimal variant of `w2.m` that serves as the main test case for the
@@ -75,6 +59,22 @@ Because the scaled Jacobian `I` is blind to straight-sided distortion
 `η` is the metric that actually sees the sliver. This inheritance of
 reference distortion by the smoothed output is exactly the failure
 mode that motivates the `W`-modification.
+
+### `w2_3d.m` — 3D analogue of `w2.m`
+
+Same paradigm in three dimensions. Reference is a structured
+tetrahedral mesh of the unit cube (`mshcube(n+1, n+1, n+1)` with
+`n = 6`, giving a `7 × 7 × 7` vertex grid and 1296 tets) at
+`porder = 4`. The boundary on side~1 (`x = 0`) is displaced inward
+by `0.4 * sin(π y) * sin(π z)`, producing a severely tangled initial
+configuration near that face (`min I ≈ -7`, where `I` is the scaled
+Jacobian of Fortunato–Persson). After the Winslow iteration all
+elements are valid (`min I ≈ +0.7`). The script saves three mesh
+views to `demos/original-formulation/figures/w2_3d/` (reference, tangled, smoothed), all
+rendered from a viewpoint that shows the perturbed `x = 0` face,
+along with three per-element scaled-Jacobian histograms (one per
+configuration) demonstrating that the negative tail of `I` in the
+tangled mesh is eliminated after smoothing.
 
 ## `w2_W.m`, `w2_skewed_W.m` — the `W`-modified formulation
 
