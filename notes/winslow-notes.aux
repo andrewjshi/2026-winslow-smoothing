@@ -25,14 +25,15 @@
 \newlabel{sub@fig:smoothed}{{c}{2}{After Winslow\relax }{figure.caption.2}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces (\subref  {fig:ref}) Structured $11 \times 11$ reference mesh at $p=4$. (\subref  {fig:tangled}) Initial configuration: interior nodes unchanged, boundary on side\nobreakspace  {}4 displaced by $0.5 \sin (\pi y)$, producing heavy tangling. (\subref  {fig:smoothed}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }}{2}{figure.caption.2}\protected@file@percent }
 \newlabel{fig:w2}{{1}{2}{(\subref {fig:ref}) Structured $11 \times 11$ reference mesh at $p=4$. (\subref {fig:tangled}) Initial configuration: interior nodes unchanged, boundary on side~4 displaced by $0.5 \sin (\pi y)$, producing heavy tangling. (\subref {fig:smoothed}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }{figure.caption.2}{}}
-\newlabel{fig:ref}{{2a}{3}{Reference mesh.\relax }{figure.caption.3}{}}
-\newlabel{sub@fig:ref}{{a}{3}{Reference mesh.\relax }{figure.caption.3}{}}
-\newlabel{fig:tangled}{{2b}{3}{Initial configuration.\relax }{figure.caption.3}{}}
-\newlabel{sub@fig:tangled}{{b}{3}{Initial configuration.\relax }{figure.caption.3}{}}
-\newlabel{fig:smoothed}{{2c}{3}{After Winslow\relax }{figure.caption.3}{}}
-\newlabel{sub@fig:smoothed}{{c}{3}{After Winslow\relax }{figure.caption.3}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces (\subref  {fig:ref}) Structured $7 \times 7 \times 7$ tetrahedral reference mesh of the unit cube at $p=4$. (\subref  {fig:tangled}) Initial configuration: interior nodes unchanged, boundary on side\nobreakspace  {}1 ($x=0$) displaced by $0.4 \sin (\pi y)\sin (\pi z)$, producing heavy tangling. (\subref  {fig:smoothed}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }}{3}{figure.caption.3}\protected@file@percent }
-\newlabel{fig:w2_3d}{{2}{3}{(\subref {fig:ref}) Structured $7 \times 7 \times 7$ tetrahedral reference mesh of the unit cube at $p=4$. (\subref {fig:tangled}) Initial configuration: interior nodes unchanged, boundary on side~1 ($x=0$) displaced by $0.4 \sin (\pi y)\sin (\pi z)$, producing heavy tangling. (\subref {fig:smoothed}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }{figure.caption.3}{}}
+\newlabel{eq:scaledJ}{{4}{2}{Numerical Results/Tests}{equation.0.4}{}}
+\newlabel{fig:ref-3d}{{2a}{3}{Reference mesh.\relax }{figure.caption.3}{}}
+\newlabel{sub@fig:ref-3d}{{a}{3}{Reference mesh.\relax }{figure.caption.3}{}}
+\newlabel{fig:tangled-3d}{{2b}{3}{Initial configuration.\relax }{figure.caption.3}{}}
+\newlabel{sub@fig:tangled-3d}{{b}{3}{Initial configuration.\relax }{figure.caption.3}{}}
+\newlabel{fig:smoothed-3d}{{2c}{3}{After Winslow\relax }{figure.caption.3}{}}
+\newlabel{sub@fig:smoothed-3d}{{c}{3}{After Winslow\relax }{figure.caption.3}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces (\subref  {fig:ref-3d}) Structured $7 \times 7 \times 7$ tetrahedral reference mesh of the unit cube at $p=4$. (\subref  {fig:tangled-3d}) Initial configuration: interior nodes unchanged, boundary on side\nobreakspace  {}1 ($x=0$) displaced by $0.4 \sin (\pi y)\sin (\pi z)$, producing heavy tangling. (\subref  {fig:smoothed-3d}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }}{3}{figure.caption.3}\protected@file@percent }
+\newlabel{fig:w2_3d}{{2}{3}{(\subref {fig:ref-3d}) Structured $7 \times 7 \times 7$ tetrahedral reference mesh of the unit cube at $p=4$. (\subref {fig:tangled-3d}) Initial configuration: interior nodes unchanged, boundary on side~1 ($x=0$) displaced by $0.4 \sin (\pi y)\sin (\pi z)$, producing heavy tangling. (\subref {fig:smoothed-3d}) After Winslow iterations, interior nodes have redistributed to absorb the boundary deformation; all elements valid.\relax }{figure.caption.3}{}}
 \newlabel{fig:hist-ref}{{3a}{3}{Reference\caption@thelabel \relax }{figure.caption.4}{}}
 \newlabel{sub@fig:hist-ref}{{a}{3}{Reference\caption@thelabel \relax }{figure.caption.4}{}}
 \newlabel{fig:hist-tangled}{{3b}{3}{Tangled\caption@thelabel \relax }{figure.caption.4}{}}
@@ -41,10 +42,66 @@
 \newlabel{sub@fig:hist-smoothed}{{c}{3}{Smoothed\caption@thelabel \relax }{figure.caption.4}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {3}{\ignorespaces Per-element scaled Jacobian $I = \min _{\xi } J(\xi ) / \max _{\xi } J(\xi )$ (Fortunato--Persson 2016, Sec.\nobreakspace  {}4) for each configuration. (\subref  {fig:hist-ref}) Reference: all elements straight-sided simplex, $I = 1$. (\subref  {fig:hist-tangled}) Tangled: long negative tail with $\min I = -6.96$; boundary-adjacent elements inverted. (\subref  {fig:hist-smoothed}) Smoothed: all $I > 0$, most near\nobreakspace  {}$1$, with $\min I \approx 0.70$ on elements bordering the indentation.\relax }}{3}{figure.caption.4}\protected@file@percent }
 \newlabel{fig:w2_3d_hist}{{3}{3}{Per-element scaled Jacobian $I = \min _{\xi } J(\xi ) / \max _{\xi } J(\xi )$ (Fortunato--Persson 2016, Sec.~4) for each configuration. (\subref {fig:hist-ref}) Reference: all elements straight-sided simplex, $I = 1$. (\subref {fig:hist-tangled}) Tangled: long negative tail with $\min I = -6.96$; boundary-adjacent elements inverted. (\subref {fig:hist-smoothed}) Smoothed: all $I > 0$, most near~$1$, with $\min I \approx 0.70$ on elements bordering the indentation.\relax }{figure.caption.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {1}Test setup}{4}{section.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {1}$W$ modification to achieve reference element shape}{4}{section.1}\protected@file@percent }
+\newlabel{sec:W-mod}{{1}{4}{$W$ modification to achieve reference element shape}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Target metric}{4}{subsection.1.1}\protected@file@percent }
+\newlabel{eq:tildeg}{{5}{4}{Target metric}{equation.1.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Modified split form}{4}{subsection.1.2}\protected@file@percent }
+\newlabel{eq:Wsplit-alpha}{{6}{4}{Modified split form}{equation.1.6}{}}
+\newlabel{eq:Wsplit-x}{{7}{4}{Modified split form}{equation.1.7}{}}
+\newlabel{sec:W-heuristic}{{1.2}{4}{Heuristic nature of the extension}{section*.5}{}}
+\@writefile{toc}{\contentsline {paragraph}{Heuristic nature of the extension.}{4}{section*.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.3}Continuity of $W$ across element interfaces}{4}{subsection.1.3}\protected@file@percent }
+\newlabel{sec:W-continuity}{{1.3}{4}{Continuity of $W$ across element interfaces}{subsection.1.3}{}}
+\citation{liu1994relationship}
+\citation{shi2023local}
+\citation{liu1994relationship}
+\citation{shi2023local}
+\citation{liu1994relationship}
+\citation{shi2023local}
+\newlabel{eq:Wnodal}{{8}{5}{Continuity of $W$ across element interfaces}{equation.1.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Boundary treatment}{5}{subsection.1.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Effect on the Picard iteration}{5}{subsection.1.5}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.6}Numerical Results/Tests}{5}{subsection.1.6}\protected@file@percent }
+\newlabel{eq:eta}{{9}{5}{Numerical Results/Tests}{equation.1.9}{}}
+\newlabel{fig:ref-skewed}{{4a}{6}{Reference mesh.\relax }{figure.caption.6}{}}
+\newlabel{sub@fig:ref-skewed}{{a}{6}{Reference mesh.\relax }{figure.caption.6}{}}
+\newlabel{fig:tangled-skewed}{{4b}{6}{Initial configuration.\relax }{figure.caption.6}{}}
+\newlabel{sub@fig:tangled-skewed}{{b}{6}{Initial configuration.\relax }{figure.caption.6}{}}
+\newlabel{fig:smoothed-skewed}{{4c}{6}{After Winslow\relax }{figure.caption.6}{}}
+\newlabel{sub@fig:smoothed-skewed}{{c}{6}{After Winslow\relax }{figure.caption.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Baseline test: structured $11 \times 11$ mesh at $p = 4$ with one interior vertex manually displaced toward a neighbor to create a single sliver cluster in the upper-right. (\subref  {fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$. (\subref  {fig:tangled-skewed}) Boundary on side\nobreakspace  {}4 displaced by $0.5 \sin (\pi y)$, producing heavy tangling near the perturbed edge on top of the reference-induced sliver. (\subref  {fig:smoothed-skewed}) After unmodified Winslow: elements valid, but reference skew persists, with $\max \eta = 7.17$ on the sliver in the upper-right.\relax }}{6}{figure.caption.6}\protected@file@percent }
+\newlabel{fig:w2_skewed}{{4}{6}{Baseline test: structured $11 \times 11$ mesh at $p = 4$ with one interior vertex manually displaced toward a neighbor to create a single sliver cluster in the upper-right. (\subref {fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$. (\subref {fig:tangled-skewed}) Boundary on side~4 displaced by $0.5 \sin (\pi y)$, producing heavy tangling near the perturbed edge on top of the reference-induced sliver. (\subref {fig:smoothed-skewed}) After unmodified Winslow: elements valid, but reference skew persists, with $\max \eta = 7.17$ on the sliver in the upper-right.\relax }{figure.caption.6}{}}
+\newlabel{fig:hist-I-ref-skewed}{{5a}{6}{Reference\caption@thelabel \relax }{figure.caption.7}{}}
+\newlabel{sub@fig:hist-I-ref-skewed}{{a}{6}{Reference\caption@thelabel \relax }{figure.caption.7}{}}
+\newlabel{fig:hist-I-tangled-skewed}{{5b}{6}{Tangled\caption@thelabel \relax }{figure.caption.7}{}}
+\newlabel{sub@fig:hist-I-tangled-skewed}{{b}{6}{Tangled\caption@thelabel \relax }{figure.caption.7}{}}
+\newlabel{fig:hist-I-smoothed-skewed}{{5c}{6}{Smoothed\caption@thelabel \relax }{figure.caption.7}{}}
+\newlabel{sub@fig:hist-I-smoothed-skewed}{{c}{6}{Smoothed\caption@thelabel \relax }{figure.caption.7}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces Per-element scaled Jacobian $I = \min _{\xi } J(\xi ) / \max _{\xi } J(\xi )$ (Fortunato--Persson 2016, Sec.\nobreakspace  {}4). (\subref  {fig:hist-I-ref-skewed}) Reference: all elements straight-sided simplex, so $I = 1$ identically---the metric is blind to the sliver clusters present in the mesh. (\subref  {fig:hist-I-tangled-skewed}) Tangled: long negative tail, $\min I = -12.2$. (\subref  {fig:hist-I-smoothed-skewed}) Smoothed: all $I > 0$, $\min I \approx 0.67$ on elements bordering the indentation.\relax }}{6}{figure.caption.7}\protected@file@percent }
+\newlabel{fig:w2_skewed_hist_I}{{5}{6}{Per-element scaled Jacobian $I = \min _{\xi } J(\xi ) / \max _{\xi } J(\xi )$ (Fortunato--Persson 2016, Sec.~4). (\subref {fig:hist-I-ref-skewed}) Reference: all elements straight-sided simplex, so $I = 1$ identically---the metric is blind to the sliver clusters present in the mesh. (\subref {fig:hist-I-tangled-skewed}) Tangled: long negative tail, $\min I = -12.2$. (\subref {fig:hist-I-smoothed-skewed}) Smoothed: all $I > 0$, $\min I \approx 0.67$ on elements bordering the indentation.\relax }{figure.caption.7}{}}
+\newlabel{fig:hist-eta-ref-skewed}{{6a}{7}{Reference\caption@thelabel \relax }{figure.caption.8}{}}
+\newlabel{sub@fig:hist-eta-ref-skewed}{{a}{7}{Reference\caption@thelabel \relax }{figure.caption.8}{}}
+\newlabel{fig:hist-eta-tangled-skewed}{{6b}{7}{Tangled\caption@thelabel \relax }{figure.caption.8}{}}
+\newlabel{sub@fig:hist-eta-tangled-skewed}{{b}{7}{Tangled\caption@thelabel \relax }{figure.caption.8}{}}
+\newlabel{fig:hist-eta-smoothed-skewed}{{6c}{7}{Smoothed\caption@thelabel \relax }{figure.caption.8}{}}
+\newlabel{sub@fig:hist-eta-smoothed-skewed}{{c}{7}{Smoothed\caption@thelabel \relax }{figure.caption.8}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces Per-element shape distortion metric $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$\nobreakspace  {}\cite  {liu1994relationship,shi2023local} for each configuration. $\eta \in [1, \infty )$ with $\eta = 1$ at conformal (ideal) elements; unlike $I$, $\eta $ detects straight-sided slivers. (\subref  {fig:hist-eta-ref-skewed}) Reference: $\max \eta = 4.63$, mean $1.53$---the right tail corresponds to the sliver cluster around the moved vertex. (\subref  {fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$. (\subref  {fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$, mean $2.25$---the sliver cluster persists as the worst element in the smoothed output, motivating the $W$-modification in Section\nobreakspace  {}1.\relax }}{7}{figure.caption.8}\protected@file@percent }
+\newlabel{fig:w2_skewed_hist_eta}{{6}{7}{Per-element shape distortion metric $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$~\cite {liu1994relationship,shi2023local} for each configuration. $\eta \in [1, \infty )$ with $\eta = 1$ at conformal (ideal) elements; unlike $I$, $\eta $ detects straight-sided slivers. (\subref {fig:hist-eta-ref-skewed}) Reference: $\max \eta = 4.63$, mean $1.53$---the right tail corresponds to the sliver cluster around the moved vertex. (\subref {fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$. (\subref {fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$, mean $2.25$---the sliver cluster persists as the worst element in the smoothed output, motivating the $W$-modification in Section~1.\relax }{figure.caption.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.7}Numerical experiments with the $W$-modification (negative result)}{7}{subsection.1.7}\protected@file@percent }
+\newlabel{sec:W-experiments}{{1.7}{7}{Numerical experiments with the $W$-modification (negative result)}{subsection.1.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Piecewise-constant $W_K$.}{7}{section*.9}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Nodal projection onto $P^1$ (linear corners only).}{7}{section*.10}\protected@file@percent }
 \bibstyle{plain}
 \bibdata{refs}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Results}{5}{section.2}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3}Observations}{5}{section.3}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4}Next steps}{5}{section.4}\protected@file@percent }
-\gdef \@abspage@last{5}
+\bibcite{fortunato2016high}{1}
+\@writefile{toc}{\contentsline {paragraph}{Nodal projection onto $V_h^p$ (all CG nodes).}{8}{section*.11}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Weighting schemes in the lumped projection.}{8}{section*.12}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Sliver-only $W$.}{8}{section*.13}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Summary.}{8}{section*.14}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Interpretation.}{8}{section*.16}\protected@file@percent }
+\bibcite{liu1994relationship}{2}
+\bibcite{shi2023local}{3}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Sliver reference vertex $\xi =(0.72,0.79)$ image under different $W$-modification variants, on the single-sliver test of Figure\nobreakspace  {}\ref {fig:w2_skewed}. ``Target'' denotes the un-skewed position $(0.8, 0.8)$. Unmodified Winslow is shown for reference.\relax }}{9}{table.caption.15}\protected@file@percent }
+\newlabel{tab:W-summary}{{1}{9}{Sliver reference vertex $\xi =(0.72,0.79)$ image under different $W$-modification variants, on the single-sliver test of Figure~\ref {fig:w2_skewed}. ``Target'' denotes the un-skewed position $(0.8, 0.8)$. Unmodified Winslow is shown for reference.\relax }{table.caption.15}{}}
+\gdef \@abspage@last{9}

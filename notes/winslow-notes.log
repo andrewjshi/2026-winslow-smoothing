@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.3.21)  20 APR 2026 14:33
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (TeX Live 2023) (preloaded format=pdflatex 2023.3.21)  20 APR 2026 17:03
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -411,26 +411,7 @@ File: l3backend-pdftex.def 2023-01-16 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count304
 \l__pdf_internal_box=\box55
 )
-(./winslow-notes.aux
-
-LaTeX Warning: Label `fig:ref' multiply defined.
-
-
-LaTeX Warning: Label `sub@fig:ref' multiply defined.
-
-
-LaTeX Warning: Label `fig:tangled' multiply defined.
-
-
-LaTeX Warning: Label `sub@fig:tangled' multiply defined.
-
-
-LaTeX Warning: Label `fig:smoothed' multiply defined.
-
-
-LaTeX Warning: Label `sub@fig:smoothed' multiply defined.
-
-)
+(./winslow-notes.aux)
 \openout1 = `winslow-notes.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 57.
@@ -537,106 +518,189 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
  [1
 
 {/usr/local/texlive/2023/texmf-var/fonts/map/pdftex/updmap/pdftex.map}]
-<figures/w2/mesh_reference.png, id=47, 211.0284pt x 210.66705pt>
+<figures/w2/mesh_reference.png, id=68, 211.0284pt x 210.66705pt>
 File: figures/w2/mesh_reference.png Graphic file (type png)
 <use figures/w2/mesh_reference.png>
 Package pdftex.def Info: figures/w2/mesh_reference.png  used on input line 90.
 (pdftex.def)             Requested size: 150.32504pt x 150.0761pt.
-<figures/w2/mesh_tangled.png, id=48, 211.38976pt x 211.0284pt>
+<figures/w2/mesh_tangled.png, id=69, 211.38976pt x 211.0284pt>
 File: figures/w2/mesh_tangled.png Graphic file (type png)
 <use figures/w2/mesh_tangled.png>
 Package pdftex.def Info: figures/w2/mesh_tangled.png  used on input line 97.
 (pdftex.def)             Requested size: 150.32504pt x 150.07593pt.
-<figures/w2/mesh_smoothed.png, id=49, 211.0284pt x 210.66705pt>
+<figures/w2/mesh_smoothed.png, id=70, 211.0284pt x 210.66705pt>
 File: figures/w2/mesh_smoothed.png Graphic file (type png)
 <use figures/w2/mesh_smoothed.png>
 Package pdftex.def Info: figures/w2/mesh_smoothed.png  used on input line 104.
 (pdftex.def)             Requested size: 150.32504pt x 150.0761pt.
-<figures/w2_3d/mesh_reference.png, id=58, 416.9979pt x 420.6114pt>
+<figures/w2_3d/mesh_reference.png, id=80, 416.9979pt x 420.6114pt>
 File: figures/w2_3d/mesh_reference.png Graphic file (type png)
 <use figures/w2_3d/mesh_reference.png>
 Package pdftex.def Info: figures/w2_3d/mesh_reference.png  used on input line 1
-24.
+34.
 (pdftex.def)             Requested size: 150.32504pt x 151.63177pt.
-<figures/w2_3d/mesh_tangled.png, id=59, 416.9979pt x 420.6114pt>
+<figures/w2_3d/mesh_tangled.png, id=81, 416.9979pt x 420.6114pt>
 File: figures/w2_3d/mesh_tangled.png Graphic file (type png)
 <use figures/w2_3d/mesh_tangled.png>
-Package pdftex.def Info: figures/w2_3d/mesh_tangled.png  used on input line 131
+Package pdftex.def Info: figures/w2_3d/mesh_tangled.png  used on input line 141
 .
 (pdftex.def)             Requested size: 150.32504pt x 151.63177pt.
-<figures/w2_3d/mesh_smoothed.png, id=60, 416.9979pt x 420.6114pt>
+<figures/w2_3d/mesh_smoothed.png, id=82, 416.9979pt x 420.6114pt>
 File: figures/w2_3d/mesh_smoothed.png Graphic file (type png)
 <use figures/w2_3d/mesh_smoothed.png>
-Package pdftex.def Info: figures/w2_3d/mesh_smoothed.png  used on input line 13
+Package pdftex.def Info: figures/w2_3d/mesh_smoothed.png  used on input line 14
 8.
 (pdftex.def)             Requested size: 150.32504pt x 151.63177pt.
-<figures/w2_3d/hist_reference.png, id=67, 368.21565pt x 298.11375pt>
+<figures/w2_3d/hist_reference.png, id=89, 368.21565pt x 298.11375pt>
 File: figures/w2_3d/hist_reference.png Graphic file (type png)
 <use figures/w2_3d/hist_reference.png>
 Package pdftex.def Info: figures/w2_3d/hist_reference.png  used on input line 1
-54.
+64.
 (pdftex.def)             Requested size: 150.32504pt x 121.70886pt.
-<figures/w2_3d/hist_tangled.png, id=68, 368.21565pt x 298.11375pt>
+<figures/w2_3d/hist_tangled.png, id=90, 368.21565pt x 298.11375pt>
 File: figures/w2_3d/hist_tangled.png Graphic file (type png)
 <use figures/w2_3d/hist_tangled.png>
-Package pdftex.def Info: figures/w2_3d/hist_tangled.png  used on input line 157
+Package pdftex.def Info: figures/w2_3d/hist_tangled.png  used on input line 167
 .
 (pdftex.def)             Requested size: 150.32504pt x 121.70886pt.
-<figures/w2_3d/hist_smoothed.png, id=69, 368.21565pt x 298.11375pt>
+<figures/w2_3d/hist_smoothed.png, id=91, 368.21565pt x 298.11375pt>
 File: figures/w2_3d/hist_smoothed.png Graphic file (type png)
 <use figures/w2_3d/hist_smoothed.png>
-Package pdftex.def Info: figures/w2_3d/hist_smoothed.png  used on input line 16
+Package pdftex.def Info: figures/w2_3d/hist_smoothed.png  used on input line 17
 0.
 (pdftex.def)             Requested size: 150.32504pt x 121.70886pt.
 
 
-LaTeX Warning: Citation `fortunato2016high' on page 2 undefined on input line 1
-75.
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 183.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 183.
 
 [2 <./figures/w2/mesh_reference.png (PNG copy)> <./figures/w2/mesh_tangled.png 
 (PNG copy)> <./figures/w2/mesh_smoothed.png (PNG copy)>] [3 <./figures/w2_3d/me
 sh_reference.png (PNG copy)> <./figures/w2_3d/mesh_tangled.png (PNG copy)> <./f
 igures/w2_3d/mesh_smoothed.png (PNG copy)> <./figures/w2_3d/hist_reference.png 
 (PNG copy)> <./figures/w2_3d/hist_tangled.png (PNG copy)> <./figures/w2_3d/hist
-_smoothed.png (PNG copy)>] [4]
-No file winslow-notes.bbl.
+_smoothed.png (PNG copy)>]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 249.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 249.
+
+[4]
+Underfull \hbox (badness 10000) in paragraph at lines 306--309
+
+ []
+
+<figures/w2_skewed/mesh_reference.png, id=142, 211.0284pt x 210.66705pt>
+File: figures/w2_skewed/mesh_reference.png Graphic file (type png)
+<use figures/w2_skewed/mesh_reference.png>
+Package pdftex.def Info: figures/w2_skewed/mesh_reference.png  used on input li
+ne 330.
+(pdftex.def)             Requested size: 150.32504pt x 150.0761pt.
+<figures/w2_skewed/mesh_tangled.png, id=143, 211.38976pt x 211.0284pt>
+File: figures/w2_skewed/mesh_tangled.png Graphic file (type png)
+<use figures/w2_skewed/mesh_tangled.png>
+Package pdftex.def Info: figures/w2_skewed/mesh_tangled.png  used on input line
+ 337.
+(pdftex.def)             Requested size: 150.32504pt x 150.07593pt.
+<figures/w2_skewed/mesh_smoothed.png, id=144, 211.0284pt x 210.66705pt>
+File: figures/w2_skewed/mesh_smoothed.png Graphic file (type png)
+<use figures/w2_skewed/mesh_smoothed.png>
+Package pdftex.def Info: figures/w2_skewed/mesh_smoothed.png  used on input lin
+e 344.
+(pdftex.def)             Requested size: 150.32504pt x 150.0761pt.
+<figures/w2_skewed/hist_I_reference.png, id=151, 362.7954pt x 298.11375pt>
+File: figures/w2_skewed/hist_I_reference.png Graphic file (type png)
+<use figures/w2_skewed/hist_I_reference.png>
+Package pdftex.def Info: figures/w2_skewed/hist_I_reference.png  used on input 
+line 363.
+(pdftex.def)             Requested size: 150.32504pt x 123.5284pt.
+<figures/w2_skewed/hist_I_tangled.png, id=152, 362.7954pt x 298.11375pt>
+File: figures/w2_skewed/hist_I_tangled.png Graphic file (type png)
+<use figures/w2_skewed/hist_I_tangled.png>
+Package pdftex.def Info: figures/w2_skewed/hist_I_tangled.png  used on input li
+ne 367.
+(pdftex.def)             Requested size: 150.32504pt x 123.5284pt.
+<figures/w2_skewed/hist_I_smoothed.png, id=153, 362.7954pt x 298.11375pt>
+File: figures/w2_skewed/hist_I_smoothed.png Graphic file (type png)
+<use figures/w2_skewed/hist_I_smoothed.png>
+Package pdftex.def Info: figures/w2_skewed/hist_I_smoothed.png  used on input l
+ine 371.
+(pdftex.def)             Requested size: 150.32504pt x 123.5284pt.
+<figures/w2_skewed/hist_eta_reference.png, id=160, 362.7954pt x 301.3659pt>
+File: figures/w2_skewed/hist_eta_reference.png Graphic file (type png)
+<use figures/w2_skewed/hist_eta_reference.png>
+Package pdftex.def Info: figures/w2_skewed/hist_eta_reference.png  used on inpu
+t line 386.
+(pdftex.def)             Requested size: 150.32504pt x 124.87598pt.
+<figures/w2_skewed/hist_eta_tangled.png, id=161, 362.7954pt x 301.3659pt>
+File: figures/w2_skewed/hist_eta_tangled.png Graphic file (type png)
+<use figures/w2_skewed/hist_eta_tangled.png>
+Package pdftex.def Info: figures/w2_skewed/hist_eta_tangled.png  used on input 
+line 390.
+(pdftex.def)             Requested size: 150.32504pt x 124.87598pt.
+<figures/w2_skewed/hist_eta_smoothed.png, id=162, 357.0138pt x 301.3659pt>
+File: figures/w2_skewed/hist_eta_smoothed.png Graphic file (type png)
+<use figures/w2_skewed/hist_eta_smoothed.png>
+Package pdftex.def Info: figures/w2_skewed/hist_eta_smoothed.png  used on input
+ line 394.
+(pdftex.def)             Requested size: 150.32504pt x 126.8947pt.
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 409.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 409.
+
 [5{/usr/local/texlive/2023/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc
-}] (./winslow-notes.aux)
-
-LaTeX Warning: There were undefined references.
-
-
-LaTeX Warning: There were multiply-defined labels.
-
+}] [6 <./figures/w2_skewed/mesh_reference.png (PNG copy)> <./figures/w2_skewed/
+mesh_tangled.png (PNG copy)> <./figures/w2_skewed/mesh_smoothed.png (PNG copy)>
+ <./figures/w2_skewed/hist_I_reference.png (PNG copy)> <./figures/w2_skewed/his
+t_I_tangled.png (PNG copy)> <./figures/w2_skewed/hist_I_smoothed.png (PNG copy)
+>] [7 <./figures/w2_skewed/hist_eta_reference.png (PNG copy)> <./figures/w2_ske
+wed/hist_eta_tangled.png (PNG copy)> <./figures/w2_skewed/hist_eta_smoothed.png
+ (PNG copy)>] (./winslow-notes.bbl [8]) [9] (./winslow-notes.aux)
 Package rerunfilecheck Info: File `winslow-notes.out' has not changed.
-(rerunfilecheck)             Checksum: B1608C79B61F1EEA71F1E828E7ADA41C;779.
+(rerunfilecheck)             Checksum: 1BD46E4FD0BFAB55724F62C5070D05D9;2213.
  ) 
 Here is how much of TeX's memory you used:
- 14484 strings out of 476025
- 225795 string characters out of 5790017
- 1944388 words of memory out of 5000000
- 34691 multiletter control sequences out of 15000+600000
- 524097 words of font info for 75 fonts, out of 8000000 for 9000
+ 13756 strings out of 476025
+ 220662 string characters out of 5790017
+ 1867388 words of memory out of 5000000
+ 33964 multiletter control sequences out of 15000+600000
+ 528684 words of font info for 92 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,8n,76p,670b,1693s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,10n,76p,896b,555s stack positions out of 10000i,1000n,20000p,200000b,200000s
 </usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb
 ></usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb>
-</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><
-/usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></u
-sr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></u
-sr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr
-/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/l
-ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/loc
-al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/
-texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/t
-exlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/tex
-live/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texl
-ive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texli
-ve/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb>
-Output written on winslow-notes.pdf (5 pages, 766820 bytes).
+</usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb></
+usr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb></u
+sr/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb></us
+r/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb></usr
+/local/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb></usr/l
+ocal/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb></usr/loc
+al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb></usr/loc
+al/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb></usr/local
+/texlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb></usr/local/t
+exlive/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></usr/local/tex
+live/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb></usr/local/texliv
+e/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr/local/texlive
+/2023/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb></usr/local/texlive/2
+023/texmf-dist/fonts/type1/public/amsfonts/cm/cmti10.pfb></usr/local/texlive/20
+23/texmf-dist/fonts/type1/public/amsfonts/cm/cmtt10.pfb></usr/local/texlive/202
+3/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb></usr/local/texlive
+/2023/texmf-dist/fonts/type1/public/cm-super/sfrm1095.pfb>
+Output written on winslow-notes.pdf (9 pages, 1149548 bytes).
 PDF statistics:
- 226 PDF objects out of 1000 (max. 8388607)
- 171 compressed objects within 2 object streams
- 62 named destinations out of 1000 (max. 500000)
- 94 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 322 PDF objects out of 1000 (max. 8388607)
+ 231 compressed objects within 3 object streams
+ 49 named destinations out of 1000 (max. 500000)
+ 171 words of extra memory for PDF output out of 10000 (max. 10000000)
 

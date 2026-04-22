@@ -114,7 +114,17 @@ deformation; all elements valid.}
 \label{fig:w2}
 \end{figure}
 
-It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d.m} in in Figure \ref{fig:w2_3d}. The histograms of the scaled Jacobians are given in Figure \ref{fig:w2_3d_hist}. 
+It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d.m} in Figure \ref{fig:w2_3d}. To assess mesh quality we use
+the scaled Jacobian of Fortunato--Persson~\cite{fortunato2016high},
+\begin{equation}
+  I \;=\; \frac{\min_{\xi \in \kappa} J(\xi)}{\max_{\xi \in \kappa} J(\xi)},
+  \qquad I \leq 1,
+  \label{eq:scaledJ}
+\end{equation}
+approximated at the Gauss quadrature points of each element~$\kappa$.
+For a straight-sided simplex, $J$ is constant across $\kappa$ and
+$I = 1$ exactly; $I \leq 0$ indicates a degenerate or inverted element.
+Histograms for \texttt{w2\_3d.m} are given in Figure~\ref{fig:w2_3d_hist}.
 
 
 \begin{figure}[htbp]
@@ -123,27 +133,27 @@ It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d
   \centering
   \includegraphics[width=\textwidth]{figures/w2_3d/mesh_reference.png}
   \caption{Reference mesh.}
-  \label{fig:ref}
+  \label{fig:ref-3d}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
   \includegraphics[width=\textwidth]{figures/w2_3d/mesh_tangled.png}
   \caption{Initial configuration.}
-  \label{fig:tangled}
+  \label{fig:tangled-3d}
 \end{subfigure}
 \hfill
 \begin{subfigure}[b]{0.32\textwidth}
   \centering
   \includegraphics[width=\textwidth]{figures/w2_3d/mesh_smoothed.png}
   \caption{After Winslow}
-  \label{fig:smoothed}
+  \label{fig:smoothed-3d}
 \end{subfigure}
-\caption{(\subref{fig:ref}) Structured $7 \times 7 \times 7$ tetrahedral
-  reference mesh of the unit cube at $p=4$. (\subref{fig:tangled}) Initial
+\caption{(\subref{fig:ref-3d}) Structured $7 \times 7 \times 7$ tetrahedral
+  reference mesh of the unit cube at $p=4$. (\subref{fig:tangled-3d}) Initial
   configuration: interior nodes unchanged, boundary on side~1 ($x=0$)
   displaced by $0.4 \sin(\pi y)\sin(\pi z)$, producing heavy tangling.
-  (\subref{fig:smoothed}) After Winslow iterations, interior nodes have
+  (\subref{fig:smoothed-3d}) After Winslow iterations, interior nodes have
   redistributed to absorb the boundary deformation; all elements valid.}
 \label{fig:w2_3d}
 \end{figure}
@@ -170,107 +180,378 @@ It is straightforward to ask Claude Code to write the 3D analogue \texttt{w2\_3d
   \end{figure}
   
 
-These notes record the starting state of the W-modified Winslow
-smoothing project and fix notation for what comes next. The plan is to
-extend Fortunato--Persson 2016~\cite{fortunato2016high} by introducing a per-element
-target-shape matrix $\W$ into the Winslow system so that the physical
-mesh shape is governed by $\W$ rather than inherited from the reference
-mesh. Before introducing $\W$, this note replicates the 2016 paradigm
-on a stress test so we have a clean baseline.
+\section{$W$ modification to achieve reference element shape}
+\label{sec:W-mod}
 
-\section{Test setup}
+The 2016 formulation produces a physical mesh whose element shapes are
+inherited from the reference mesh: the contravariant metric $g^{ij}$
+in the split-form system of Section~0 is built from the reference
+element geometry, so a skewed reference produces skewed physical
+elements. The $W$-modification below decouples the target shape from
+the reference element shape.
 
-A structured $11 \times 11$ reference mesh of the unit square is built at
-polynomial degree $p=4$. The nodes on one boundary edge (side~4) are
-displaced by $x \mapsto x + 0.5 \sin(\pi y)$, while all other boundary
-nodes and all interior nodes stay at their reference positions. With
-grid spacing $\Delta = 0.1$, the boundary perturbation amplitude of
-$0.5$ cuts through roughly five element layers, producing heavy tangling
-near the perturbed boundary. The Winslow--Picard solver from the 2016
-paper (\texttt{elliptic\_smoothing.m}) is then applied, with the
-reference mesh as the computational domain and the perturbed node
-positions supplied as Dirichlet data on the physical coordinates.
+\subsection{Target metric}
 
-The driver script \texttt{w2.m} is reproduced below.
+For each reference element $K \in \mathcal{T}_h$, let $W_K \in \mathbb{R}^{n\times n}$
+denote the Jacobian of an affine map from an ideal element (e.g.\ a
+unit equilateral simplex or unit square) to the reference element
+geometry. The total map from the ideal element to the physical
+element then has Jacobian $J_{\mathrm{tot}} = J W_K^{-1}$, where
+$J = \partial x/\partial \xi$ is the reference-to-physical Jacobian.
 
-\begin{lstlisting}
-porder = 4;
-n = 10;
-msh = mshsquare(n+1, n+1);
-msh = nodealloc(msh, porder);
+The covariant and contravariant metrics of the total map are
+\begin{equation}
+  \tilde g_{ij} = (J_{\mathrm{tot}}^T J_{\mathrm{tot}})_{ij}
+                = (W_K^{-T} g W_K^{-1})_{ij},
+  \qquad
+  \tilde g^{ij} = (W_K g^{-1} W_K^T)_{ij}
+                = W_{K,ik}\, g^{kl}\, W_{K,jl}.
+  \label{eq:tildeg}
+\end{equation}
+With $W_K = I$ for all $K$, $\tilde g^{ij} = g^{ij}$ and the 2016
+formulation is recovered.
 
-% Output directory for figures
-figdir = 'figures';
-if ~exist(figdir, 'dir'), mkdir(figdir); end
+\subsection{Modified split form}
 
-% --- Figure 1: reference mesh -------------------------------------------
-figure(1); clf;
-dgmeshplot_curved(msh, 4, 1, 0);
-set(gcf, 'Position', [114 1 560 420]);
-exportgraphics(gcf, fullfile(figdir, 'mesh_reference.png'), 'Resolution', 200);
+We replace $g^{ij}$ by $\tilde g^{ij}$ in the split-form system of
+Section~0, introducing a modified auxiliary variable
+$\tilde\alpha_j = -\partial_i \tilde g^{ij}$:
+\begin{align}
+  \partial_i(\tilde g^{ij}) + \tilde\alpha_j &= 0, \label{eq:Wsplit-alpha}\\
+  \partial_i(\tilde g^{ij}\, \partial_j x_k)
+    + \tilde\alpha_j\, \partial_j x_k &= 0,
+    \label{eq:Wsplit-x}
+\end{align}
+with Dirichlet data $x = x_{\mathrm{bnd}}$ on $\partial C$. The
+equivalence with the nonconservative form
+$\tilde g^{ij}\partial_i\partial_j x_k = 0$ follows from
+\eqref{eq:Wsplit-alpha} by the same product-rule argument as in the
+unmodified case.
 
-% --- Build the perturbation: displace nodes on boundary 4 ---------------
-[~, edg] = getbndnodes(msh, dginit(msh), 4);
-x = msh.p1(:,1,:);
-y = msh.p1(:,2,:);
-newx = x;
-newy = y;
-newx(edg) = x(edg) + 0.5*sin(pi*y(edg));
-curvep1 = cat(2, newx, newy);
+\paragraph{Heuristic nature of the extension.}\label{sec:W-heuristic}
+The classical Winslow system $g^{ij}\partial_i\partial_j x_k = 0$ is
+the reformulation, via change of variables, of $\Delta_x \xi_k = 0$---the
+Euler--Lagrange equation of the Dirichlet energy $\int_D |\nabla_x \xi|^2\,dx$
+for the inverse map. The substitution $g \mapsto \tilde g$ in
+\eqref{eq:Wsplit-alpha}--\eqref{eq:Wsplit-x} is not, to the authors'
+knowledge, the Euler--Lagrange equation of any natural energy
+functional in $x$. In particular, for piecewise-constant $W_K$ the
+map $\xi \mapsto W_K \xi$ is a per-element linear reparameterization
+of the reference coordinates, and harmonic maps are invariant under
+such reparameterizations, so the natural variational interpretation
+collapses to the unmodified Winslow system. We therefore regard
+\eqref{eq:Wsplit-alpha}--\eqref{eq:Wsplit-x} as a heuristic extension
+of the 2016 numerical scheme, parameterized so as to retain its
+Picard structure, rather than as the discretization of a derived PDE.
+Consequences: no Rad\'o--Kneser--Choquet analog applies, and
+convergence of the resulting Picard iteration is assessed empirically.
 
-msh_tangled = msh;
-msh_tangled.p1 = curvep1;
+\subsection{Continuity of $W$ across element interfaces}
+\label{sec:W-continuity}
 
-% --- Figure 2: tangled initial configuration ----------------------------
-figure(2); clf;
-dgmeshplot_curved(msh_tangled, 4, 1, 0);
-set(gcf, 'Position', [114 1 560 420]);
-exportgraphics(gcf, fullfile(figdir, 'mesh_tangled.png'), 'Resolution', 200);
+A piecewise-constant $W_K$ renders $\tilde g^{ij}$ discontinuous
+across element interfaces. This is not a new obstruction: $g^{ij}$
+itself is already discontinuous in the 2016 formulation, since the
+CG space $V_h^p$ yields $x_h \in C^0$ but $\nabla x_h \notin C^0$.
+The weak projection defining $\alpha_h$, which includes only external
+boundary fluxes, smooths these jumps into $V_h^p$ through the CG
+mass matrix.
 
-% --- Run Winslow-Picard -------------------------------------------------
-doplot = false;
-msh1 = elliptic_smoothing(msh, curvep1, doplot);
+The same mechanism handles jumps in $\tilde g^{ij}$, provided the
+amplitude of the $W_K$-induced jumps remains comparable to those
+already present in $g^{ij}$. When the reference mesh contains
+neighboring elements of strongly differing shape, we avoid
+amplifying interface jumps by replacing $W_K$ with a continuous
+nodal field $W_h \in V_h^p$, constructed by lumped $L^2$ projection:
+at each node $\mathbf{x}_n$,
+\begin{equation}
+  W_h(\mathbf{x}_n)
+    = \frac{\sum_{K \ni \mathbf{x}_n} |K|\, W_K}
+           {\sum_{K \ni \mathbf{x}_n} |K|},
+  \label{eq:Wnodal}
+\end{equation}
+with $W_h$ then interpolated across element interiors via the
+standard shape functions. This corresponds to $L^2$ projection with a
+lumped mass matrix and is computed once per run. The resulting
+$\tilde g^{ij}$ inherits the same regularity class as the unmodified
+$g^{ij}$, and the $\tilde\alpha$ projection is unchanged at the
+implementation level.
 
-% --- Figure 3: final smoothed mesh --------------------------------------
-figure(3); clf;
-dgmeshplot_curved(msh1, 4, 1, 0);
-set(gcf, 'Position', [114 1 560 420]);
-exportgraphics(gcf, fullfile(figdir, 'mesh_smoothed.png'), 'Resolution', 200);
-\end{lstlisting}
+\subsection{Boundary treatment}
 
-\section{Results}
+At boundary nodes adjacent to curved geometry, an isotropic target
+$W_h$ can conflict with geometric constraints. Where this occurs we
+align one principal direction of $W_h$ tangent to the boundary,
+leaving the magnitude prescribed by the local sizing. Details are
+deferred to the implementation section.
 
+\subsection{Effect on the Picard iteration}
 
+The assembly structure of the 2016 Picard iteration is preserved:
+the CG mass matrix in the $\tilde\alpha$ solve is unchanged, and the
+stiffness matrix in the $x$ solve is assembled from $\tilde g^{ij}$
+and $\tilde\alpha_j$ via the same routines as the unmodified case.
+The convergence rate, however, depends on spectral properties of the
+iteration operator, which change with $W$. We report iteration
+counts empirically in the results section.
 
-\section{Observations}
+\subsection{Numerical Results/Tests}
 
-The 2016 method untangles this configuration within its expected regime:
-the tangling is boundary-induced, spatially localized, and topologically
-compatible with a valid target. This is exactly the regime
-Fortunato--Persson 2016 treats. The contribution of the present project
-is not to extend what the 2016 method can untangle (it cannot untangle
-genuinely tangled references); the contribution is to change what the
-resulting physical mesh \emph{looks like}. Via $\W$-modification, the
-target element shape will be decoupled from the reference element
-shape, so a skewed reference no longer forces skewed physical elements.
-
-\section{Next steps}
-
-% Andrew: fill in as work progresses.
+In order to test the effectiveness of this $W$:
 \begin{itemize}
-  \item Derive the $\W$-modified system. With $\J_{\text{total}} = \J \W^{-1}$,
-    the modified contravariant metric is $\tilde g^{ij} = W_{ik}\, g^{kl}\, W_{jl}$,
-    and the split-form equations retain their structure with $g^{ij}$ and
-    $\alpha_j$ replaced by their tilded counterparts.
-  \item Implement the $\W$-modified $\alpha$-projection and Picard solve
-    in 2D. Verify that Picard iteration counts are comparable to the
-    unmodified case on a smooth test problem.
-  \item Repeat the stress test in this note with a \emph{skewed} reference
-    mesh. Compare post-convergence element quality (scaled Jacobian
-    histogram) against unmodified Winslow on the same reference. This is
-    the minimum test that would establish $\W$-modification as a real
-    capability extension over 2016.
+	\item Repeat the experiments \texttt{w2.m} and \texttt{w2\_3d.m} with a skewed but valid reference mesh of the unit/cube. Observe that the current Persson-Fortunato setting will behave correspondingly according to the reference mesh. 
+	\item Implement $W$ modification. Check that this makes the physical mesh truly agnostic to the quality of the skewed (but for now, still valid/untangled) reference mesh. 
 \end{itemize}
+
+\texttt{w2.m} is reproduced but with some poorly shaped elements in
+the reference mesh. The code that does this is \texttt{w2\_skewed.m}. 
+The results are in Figure \ref{fig:w2_skewed}. \\
+
+
+The scaled Jacobian~\eqref{eq:scaledJ} is blind to this regime: any
+simplex with straight edges has $I = 1$ regardless of aspect ratio.
+To capture straight-sided shape distortion we additionally report the
+Liu--Joe inverse mean-ratio shape distortion
+metric~\cite{liu1994relationship,shi2023local},
+\begin{equation}
+  \eta \;=\; \frac{\|\J\|_F^2}{d \, |\det \J|^{2/d}},
+  \qquad \eta \in [1, \infty),
+  \label{eq:eta}
+\end{equation}
+with $\eta = 1$ for a conformal (ideal) element and $\eta \to \infty$
+as the element degenerates. The scaled Jacobian distribution is given
+in Figure~\ref{fig:w2_skewed_hist_I} and the shape distortion
+distribution in Figure~\ref{fig:w2_skewed_hist_eta}.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_reference.png}
+    \caption{Reference mesh.}
+    \label{fig:ref-skewed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_tangled.png}
+    \caption{Initial configuration.}
+    \label{fig:tangled-skewed}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{figures/w2_skewed/mesh_smoothed.png}
+    \caption{After Winslow}
+    \label{fig:smoothed-skewed}
+  \end{subfigure}
+  \caption{Baseline test: structured $11 \times 11$ mesh at $p = 4$ with
+  one interior vertex manually displaced toward a neighbor to create
+  a single sliver cluster in the upper-right.
+  (\subref{fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$.
+  (\subref{fig:tangled-skewed}) Boundary on side~4 displaced by
+  $0.5 \sin(\pi y)$, producing heavy tangling near the perturbed edge on
+  top of the reference-induced sliver. (\subref{fig:smoothed-skewed})
+  After unmodified Winslow: elements valid, but reference skew persists,
+  with $\max \eta = 7.17$ on the sliver in the upper-right.}
+  \label{fig:w2_skewed}
+  \end{figure}
+
+  \begin{figure}[htbp]
+  \centering
+  \subfloat[Reference\label{fig:hist-I-ref-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_reference.png}}
+  \hfill
+  \subfloat[Tangled\label{fig:hist-I-tangled-skewed}]{%
+
+  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_tangled.png}}
+  \hfill
+  \subfloat[Smoothed\label{fig:hist-I-smoothed-skewed}]{%
+
+  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_I_smoothed.png}}
+  \caption{Per-element scaled Jacobian
+  $I = \min_{\xi} J(\xi) / \max_{\xi} J(\xi)$ (Fortunato--Persson 2016,
+  Sec.~4). (\subref{fig:hist-I-ref-skewed}) Reference: all elements
+  straight-sided simplex, so $I = 1$ identically---the metric is blind to
+  the sliver clusters present in the mesh.
+  (\subref{fig:hist-I-tangled-skewed}) Tangled: long negative tail,
+  $\min I = -12.2$. (\subref{fig:hist-I-smoothed-skewed}) Smoothed: all
+  $I > 0$, $\min I \approx 0.67$ on elements bordering the indentation.}
+  \label{fig:w2_skewed_hist_I}
+  \end{figure}
+
+  \begin{figure}[htbp]
+  \centering
+  \subfloat[Reference\label{fig:hist-eta-ref-skewed}]{%
+    \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_reference.png}}
+  \hfill
+  \subfloat[Tangled\label{fig:hist-eta-tangled-skewed}]{%
+
+  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_tangled.png}}
+  \hfill
+  \subfloat[Smoothed\label{fig:hist-eta-smoothed-skewed}]{%
+
+  \includegraphics[width=0.32\textwidth]{figures/w2_skewed/hist_eta_smoothed.png}}
+  \caption{Per-element shape distortion metric
+  $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$~\cite{liu1994relationship,shi2023local}
+  for each configuration. $\eta \in [1, \infty)$ with $\eta = 1$ at
+  conformal (ideal) elements; unlike $I$, $\eta$ detects straight-sided
+  slivers. (\subref{fig:hist-eta-ref-skewed}) Reference:
+  $\max \eta = 4.63$, mean $1.53$---the right tail corresponds to the
+  sliver cluster around the moved vertex.
+  (\subref{fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$.
+  (\subref{fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$,
+  mean $2.25$---the sliver cluster persists as the worst element in
+  the smoothed output, motivating the $W$-modification in Section~1.}
+  \label{fig:w2_skewed_hist_eta}
+  \end{figure}
+
+\subsection{Numerical experiments with the $W$-modification (negative result)}
+\label{sec:W-experiments}
+
+We implemented the split-form modification of
+Section~\ref{sec:W-mod}---literally substituting
+$\tilde g^{ij} = W_K g^{-1} W_K^T$ in place of $g^{ij}$ in both
+\texttt{sm1alpha2d} and \texttt{sm12d} of the Picard solver---and ran
+it on the single-sliver test of Figure~\ref{fig:w2_skewed}. The
+implementation lives in \texttt{elliptic\_smoothing\_W.m}, with the
+per-element $W_K$ built by \texttt{compute\_WK\_simplex.m} from an
+ideal equilateral triangle. A regression test
+(\texttt{demos/w\_regression.m}) verifies that the modified solver
+reproduces the unmodified output bit-for-bit when
+$W_K = I$ at every element, so the wiring is trustworthy.
+
+The experimental conclusion is negative. The $W$-modification
+converges in most of the variants we tried, but none of them produce
+a smoothed mesh that is meaningfully better than the unmodified
+Winslow output on the sliver test. Below we report the specific
+variants we tried and why each fails.
+
+\paragraph{Piecewise-constant $W_K$.}
+The simplest implementation: feed the raw per-element $W_K$ directly
+into the substituted split form, with no smoothing across element
+interfaces. For the uniform unskewed reference mesh this already
+diverges: adjacent triangles in each cell of \texttt{mshsquare} have
+different corner orderings, so $W_K$ jumps by a rotation/reflection
+at every interior edge. The jumps in $\tilde g^{ij}$ that result are
+too large for the weak $\tilde\alpha$-projection to absorb, and the
+Picard iteration blows up. Restricting $W_K \neq I$ to only the four
+sliver-cluster elements, with $W_K = I$ everywhere else, also
+diverges---even four interfaces with a non-trivial jump are enough
+to destabilize.
+
+\paragraph{Nodal projection onto $P^1$ (linear corners only).}
+As suggested in Section~\ref{sec:W-continuity}, we project $W_K$ to a
+continuous field $W_h$ by a lumped $L^2$ projection onto the linear
+corner vertices of the mesh (Eq.~\eqref{eq:Wnodal}), then interpolate
+linearly to all DG nodes for use at Gauss points. This stabilizes the
+Picard iteration but also washes the correction out. On the single-
+sliver test, the sliver reference vertex at
+$\xi = (0.72, 0.79)$ is mapped by the smoothed output to:
+$(0.7964, 0.79)$ under unmodified Winslow and
+$(0.8029, 0.79)$ under $W$-modified (P$^1$-projected) Winslow.
+The target (fully un-skewed) is $(0.8, 0.8)$. The unmodified solver
+already performs $96\%$ of the $x$-correction on its own by virtue of
+being a harmonic smoother; the $W$-modification contributes an
+additional $0.006$ shift, within the noise floor of the iteration.
+Neither method moves the $y$-coordinate at all, because the boundary
+perturbation in \texttt{w2.m} is purely in $x$ and the Winslow system
+decouples component-wise.
+Globally the $W$-modified output is in fact \emph{worse} than the
+unmodified one: $\max \eta = 19.2$ versus $7.17$, with the worst
+element having migrated from the sliver location to the lower-middle
+of the domain.
+
+\paragraph{Nodal projection onto $V_h^p$ (all CG nodes).}
+The notes' derivation (Section~\ref{sec:W-continuity}) places
+$W_h \in V_h^p$, i.e., on the full order-$p$ CG space, not just the
+linear corners. We implemented this variant as well. On the uniform
+unskewed mesh (\texttt{w2.m}) it converges but produces a smoothed
+mesh with $\min J = -2.6 \times 10^{-4}$, i.e.\ \emph{inverted}
+elements, on a problem where the unmodified solver has no difficulty.
+On the sliver test the iteration fails to converge altogether. Full
+$V_h^p$ preserves more of the per-element $W_K$ near element
+interiors and less of the corner averaging, and this extra
+expressiveness is enough to push the heuristic past stability.
+
+\paragraph{Weighting schemes in the lumped projection.}
+Equation~\eqref{eq:Wnodal} uses the element area $|K|$ as the lumping
+weight. This down-weights slivers (which have small $|K|$) relative
+to their regular-sized neighbors, so the sliver's $W_K$ is largely
+drowned out in the projected $W_h$. We replaced $|K|$ by
+$\eta_K$, $\eta_K - 1$, and $\eta_K^2$ in an attempt to boost the
+sliver's contribution, but the sliver vertex image remained within
+$\pm 0.01$ of the unmodified result across all schemes, and global
+$\max \eta$ stayed between $19$ and $22$. The weighting choice does
+not meaningfully move the numerical outcome.
+
+\paragraph{Sliver-only $W$.}
+Restricting $W_K \ne I$ to only the four sliver-cluster elements
+(identified by an $\eta$ threshold on the reference) and projecting
+only those via $P^1$ gives a sliver image of $(0.7966, 0.79)$---
+indistinguishable from the unmodified $(0.7964, 0.79)$. The
+averaging with the identity-valued $W_K$ of the surrounding elements
+at shared CG corners neutralizes the sliver correction almost
+entirely. The piecewise-constant and $V_h^p$ variants of this
+experiment both diverge.
+
+\paragraph{Summary.}
+Table~\ref{tab:W-summary} collects the results. Across every variant
+we tried---three projection choices (piecewise constant, $P^1$,
+$V_h^p$), four lumping weights (area, $\eta$, $\eta - 1$, $\eta^2$),
+and a sliver-only mask---the $W$-modification either diverges, or
+converges to an output whose sliver image agrees with the unmodified
+Winslow result to within the iteration's noise floor. The reason is
+visible by inspection: the unmodified Winslow solver, being
+harmonic, already pulls the interior sliver vertex $96\%$ of the way
+back to the un-skewed target. Any projection that is stable enough
+to keep Picard converging is also one that averages the local $W_K$
+correction heavily with its identity-valued neighbors, leaving only
+a few-tenth-of-a-percent shift that cannot close the remaining $4\%$
+gap.
+
+\begin{table}[htbp]
+\centering
+\caption{Sliver reference vertex $\xi=(0.72,0.79)$ image under
+different $W$-modification variants, on the single-sliver test of
+Figure~\ref{fig:w2_skewed}. ``Target'' denotes the un-skewed position
+$(0.8, 0.8)$. Unmodified Winslow is shown for reference.}
+\label{tab:W-summary}
+\begin{tabular}{lccc}
+\toprule
+variant & sliver image & global $\max \eta$ & notes \\
+\midrule
+unmodified Winslow & $(0.7964, 0.79)$ & $7.17$ & baseline \\
+piecewise-const $W_K$ & --- & --- & diverges \\
+$P^1$ projection, area weight & $(0.8029, 0.79)$ & $19.2$ & converges \\
+$P^1$ projection, $\eta$ weight & $(0.8010, 0.79)$ & $19.5$ & converges \\
+$P^1$ projection, $\eta^2$ weight & $(0.7937, 0.79)$ & $21.7$ & converges \\
+$P^1$ projection, $\eta-1$ weight & --- & --- & diverges \\
+$V_h^p$ projection & --- & --- & diverges or $\min J < 0$ \\
+sliver-only $W$, $P^1$ & $(0.7966, 0.79)$ & $7.05$ & $\approx$ unmodified \\
+sliver-only $W$, piecewise const & --- & --- & diverges \\
+sliver-only $W$, $V_h^p$ & --- & --- & diverges \\
+\midrule
+target (un-skewed) & $(0.80, 0.80)$ & --- & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Interpretation.}
+This is consistent with the caveat already stated in
+Section~\ref{sec:W-heuristic}: the modified split form is not the
+Euler--Lagrange equation of any natural energy, and there is no
+discrete minimum principle guaranteeing that the Picard fixed point
+is a meaningful ``$W$-harmonic'' map. Empirically, for interior
+sliver defects on an otherwise well-shaped mesh, the $W$-modification
+as written in Section~\ref{sec:W-mod} does not deliver the
+reference-agnostic behaviour that the classical formulation
+lacks---it just reshuffles the distortion without reducing it.
+Whether the construction can be rescued by machinery outside the
+scope of Section~\ref{sec:W-mod} (for instance an anisotropic
+spatially-varying ideal, damped/continuation Picard, or a proper
+variational reformulation with an $H^1$-type energy in $x$) is an
+open question.
 
 \bibliographystyle{plain}
 \bibliography{refs}

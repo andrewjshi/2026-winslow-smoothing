@@ -1,0 +1,21 @@
+\begin{thebibliography}{1}
+
+\bibitem{fortunato2016high}
+Meire Fortunato and Per-Olof Persson.
+\newblock High-order unstructured curved mesh generation using the {W}inslow
+  equations.
+\newblock {\em Journal of Computational Physics}, 307:1--14, 2016.
+
+\bibitem{liu1994relationship}
+Anwei Liu and Barry Joe.
+\newblock Relationship between tetrahedron shape measures.
+\newblock {\em BIT Numerical Mathematics}, 34(2):268--287, 1994.
+
+\bibitem{shi2023local}
+A.~Shi and P.-O. Persson.
+\newblock Local element operations for curved simplex meshes.
+\newblock {\em International Journal for Numerical Methods in Engineering},
+  2023.
+\newblock Author manuscript.
+
+\end{thebibliography}
