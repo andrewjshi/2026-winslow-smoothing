@@ -7,9 +7,6 @@ decouple the smoothed physical mesh from the shape of the reference
 
 - `init.m` — sets the MATLAB path; run before any demo.
 - `elliptic_smoothing.m` — the 2016 Fortunato–Persson Winslow smoother
-  (minor patch at the project root to call `dgmass_ml` instead of the
-  MEX `dgmass`, since the shipped MEX binaries do not run on Apple
-  Silicon).
 
 These two scripts reproduce the unmodified 2016 formulation: given a
 valid (untangled) **reference mesh**, prescribe a boundary perturbation
@@ -31,7 +28,7 @@ prescribed on the boundary.
 ### `w2.m` — structured square, violent boundary indent
 
 Reference is a structured `11 × 11` uniform mesh of the unit square
-(`mshsquare(n+1, n+1)`) at `porder = 4`. The boundary on side~4 (`x = 0`)
+(`mshsquare(n+1, n+1)`) at `porder = 4`. The boundary on side 4 (`x = 0`)
 is displaced by `0.5 * sin(π y)`, cutting roughly five element layers
 into the domain and producing heavy interior tangling in the initial
 configuration. Three figures are saved to `demos/figures/w2/`:
