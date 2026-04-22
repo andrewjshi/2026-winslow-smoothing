@@ -6,14 +6,15 @@ decouple the smoothed physical mesh from the shape of the reference
 ## `w1.m` and `w2.m` — the original Fortunato–Persson paradigm
 
 - `init.m` — sets the MATLAB path; run before any demo.
-- `elliptic_smoothing.m` — the 2016 Fortunato–Persson Winslow-Picard
-  smoother (minor patch at the project root to call `dgmass_ml` instead
-  of the MEX `dgmass`).
+- `elliptic_smoothing.m` — the 2016 Fortunato–Persson Winslow smoother
+  (minor patch at the project root to call `dgmass_ml` instead of the
+  MEX `dgmass`, since the shipped MEX binaries do not run on Apple
+  Silicon).
 
 These two scripts reproduce the unmodified 2016 formulation: given a
 valid (untangled) **reference mesh**, prescribe a boundary perturbation
 that would produce a heavily tangled initial **physical mesh**, then
-run the Winslow–Picard iteration until all elements are untangled and
+run the Winslow iteration until all elements are untangled and
 well-shaped.
 
 ### `w1.m` — curved boundary, unit disk
@@ -36,8 +37,8 @@ into the domain and producing heavy interior tangling in the initial
 configuration. Three figures are saved to `demos/figures/w2/`:
 `mesh_reference.png` (the clean reference grid), `mesh_tangled.png`
 (the initial physical configuration, with many inverted elements near
-side~4), and `mesh_smoothed.png` (the Winslow-iterated result, with
-all elements valid). This is the canonical
+side~4), and `mesh_smoothed.png` (the Winslow result, with all
+elements valid). This is the canonical
 reference-mesh-is-good / physical-mesh-starts-tangled test and is the
 starting point for all the subsequent experiments in this repo.
 
