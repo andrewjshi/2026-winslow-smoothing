@@ -1,21 +1,20 @@
 % w2_W.m - w2.m with the W-modification.
 %
-% Same reference mesh and boundary perturbation as
-% demos/original-formulation/w2.m, but the smoother is replaced by
+% Same 11x11 reference mesh and boundary perturbation as
+% demos/original-formulation/w2.m. The smoother is replaced by
 % elliptic_smoothing_W, fed with a nodal W_h built from an ideal
-% equilateral triangle via compute_Wh_nodal (default 'vhp' projection,
-% area weighting). Saves three figures:
-%   figures/w2_W/mesh_reference.png
-%   figures/w2_W/mesh_tangled.png
-%   figures/w2_W/mesh_smoothed.png
+% equilateral triangle. Starting point (closest to original FP):
+%   - projection = 'vhp'   (same target space as the alpha solve)
+%   - method     = 'full'  (full consistent CG mass matrix, matching FP)
+% Saves three figures to figures/w2_W/.
 
 porder = 4;
 n = 10;
 msh = mshsquare(n+1, n+1);
 msh = nodealloc(msh, porder);
 
-% Nodal W_h from equilateral ideal (lumped L2 projection, V_h^p).
-msh.W_h = compute_Wh_nodal(msh, 'equilateral');
+% Nodal W_h from equilateral ideal, V_h^p + full consistent L2 projection.
+msh.W_h = compute_Wh_nodal(msh, 'equilateral', 'vhp', 'full');
 
 figdir = 'figures/w2_W';
 if ~exist(figdir, 'dir'), mkdir(figdir); end
@@ -23,6 +22,7 @@ if ~exist(figdir, 'dir'), mkdir(figdir); end
 % --- Figure 1: reference mesh -------------------------------------------
 figure(1); clf;
 dgmeshplot_curved(msh, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_reference.png'), 'Resolution', 200);
 
@@ -41,6 +41,7 @@ msh_tangled.p1 = curvep1;
 % --- Figure 2: tangled initial configuration ----------------------------
 figure(2); clf;
 dgmeshplot_curved(msh_tangled, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_tangled.png'), 'Resolution', 200);
 
@@ -48,9 +49,14 @@ exportgraphics(gcf, fullfile(figdir, 'mesh_tangled.png'), 'Resolution', 200);
 doplot = false;
 msh1 = elliptic_smoothing_W(msh, curvep1, doplot);
 
-% --- Figure 3: final smoothed mesh --------------------------------------
+% --- Figure 3: final smoothed mesh (highlight inverted elements) ---------
 figure(3); clf;
-dgmeshplot_curved(msh1, 4, 1, 0);
+hh = dgmeshplot_curved(msh1, 4, 1, 0);
+bad = find(any(geojac(msh1) <= 0, 1));
+if ~isempty(bad)
+    set(hh(bad), 'FaceColor', [1, 0.4, 0.4]);
+end
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_smoothed.png'), 'Resolution', 200);
 

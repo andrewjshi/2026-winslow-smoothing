@@ -374,60 +374,143 @@ Picard structure, rather than as the discretization of a derived PDE.
 Consequences: no Rad\'o--Kneser--Choquet analog applies, and
 convergence of the resulting Picard iteration is assessed empirically.
 
-\subsection{Continuity of $W$ across element interfaces}
+\subsection{Continuity of $W$ and the $\tilde\alpha$ projection}
 \label{sec:W-continuity}
 
-A piecewise-constant $W_K$ renders $\tilde g^{ij}$ discontinuous
-across element interfaces. This is not a new obstruction: $g^{ij}$
-itself is already discontinuous in the 2016 formulation, since the
-CG space $V_h^p$ yields $x_h \in C^0$ but $\nabla x_h \notin C^0$.
-The weak projection defining $\alpha_h$, which includes only external
-boundary fluxes, smooths these jumps into $V_h^p$ through the CG
-mass matrix.
+The original Fortunato--Persson formulation already solves one
+projection problem: the auxiliary variable $\alpha_j$ is defined,
+through the weak form of~$\partial_i g^{ij} + \alpha_j = 0$, as the
+$L^2$ projection of $-\partial_i g^{ij}$ onto the continuous CG
+space $V_h^p$. Operationally this is the linear solve
+$\alpha \leftarrow M \backslash b$, where $M$ is the $V_h^p$ mass
+matrix and $b$ is assembled by quadrature from $g^{ij}$ at Gauss
+points. The solve is what makes the scheme work on unstructured
+meshes. Because $x_h \in V_h^p$ is $C^0$ but not $C^1$, the gradient
+$\partial x / \partial \xi$ jumps across every internal edge, so
+$g^{ij}$ is discontinuous there, and a strong derivative of $g^{ij}$
+would produce Dirac-style spikes supported on the interfaces. By
+omitting internal face fluxes in the weak form, the projection
+smears those spikes into a single continuous $\alpha \in V_h^p$,
+bypassing the DG machinery of numerical fluxes entirely. This is
+the computational magic of the 2016 paper.
 
-The same mechanism handles jumps in $\tilde g^{ij}$, provided the
-amplitude of the $W_K$-induced jumps remains comparable to those
-already present in $g^{ij}$. When the reference mesh contains
-neighboring elements of strongly differing shape, we avoid
-amplifying interface jumps by replacing $W_K$ with a continuous
-nodal field $W_h \in V_h^p$, constructed by lumped $L^2$ projection:
-at each node $\mathbf{x}_n$,
+In the modified system~\eqref{eq:Wsplit-alpha}--\eqref{eq:Wsplit-x}
+this projection is reused without modification. $\tilde\alpha_j$ is
+the $V_h^p$ projection of $-\partial_i \tilde g^{ij}$, computed with
+the \emph{same} mass matrix $M$ and the same backslash solve; only
+the right-hand side is altered to use
+$\tilde g^{ij} = W_K g^{ij} W_K^T$ instead of $g^{ij}$. No new
+projection infrastructure is introduced at this stage, and one can
+formally proceed without any further thought about the role of
+$W_K$.
+
+The genuinely new object is $W_K$. It is the Jacobian of the affine
+map from the ideal equilateral triangle to the (straight-sided)
+reference triangle $K$---a map that sends the three corners of the
+ideal element to the three corners of $K$. Because the map is
+affine, its Jacobian $W_K$ is a \emph{single} $2 \times 2$ matrix,
+constant throughout the interior of $K$, at every polynomial order
+$p$; the polynomial order $p$ controls how the \emph{solution} $x_h$
+is represented, not the geometry of $K$, and the straight-sided
+reference keeps $W_K$ element-constant regardless of $p$. The
+subscript $K$ records the essential point that $W_K$ is one matrix
+per element and jumps discontinuously across interfaces, since
+adjacent reference triangles are mapped from the ideal by different
+affine transformations.
+
+At a glance it is tempting to conclude that these new jumps are
+absorbed for free by the $\tilde\alpha$-projection, just as the old
+jumps of $g^{ij}$ were. The projection is indeed well-defined, but
+a subtler point intervenes. The jumps of $g^{ij}$ at an interface
+are controlled by the jumps of $\partial x_h / \partial \xi$ there,
+and these shrink to zero as the Picard iteration converges, since
+the fixed point $x_h$ is as smooth as the discrete space allows.
+FP's robustness relies on this self-limiting behaviour: the
+coefficient roughness that the iteration has to cope with decays
+alongside the iteration itself. The jumps of $W_K$ are structurally
+different. They are set once and for all by the initial reference
+mesh, are external to the iterate, and \emph{do not} decay with
+Picard. If the reference mesh contains neighbours of very different
+shape, the $W_K$ jumps can be substantial, and we have observed
+empirically that the resulting persistent coefficient roughness
+destabilises the iteration.
+
+The remedy suggested in the Persson/Gemini exchange is to elevate
+$W$ to $V_h^p$ \emph{before} forming $\tilde g^{ij}$. At each CG
+node $x_n$, assemble a nodal target $W_h(x_n)$ as a weighted average
+of the $W_K$ values from the surrounding elements,
 \begin{equation}
   W_h(\mathbf{x}_n)
     = \frac{\sum_{K \ni \mathbf{x}_n} |K|\, W_K}
            {\sum_{K \ni \mathbf{x}_n} |K|},
   \label{eq:Wnodal}
 \end{equation}
-with $W_h$ then interpolated across element interiors via the
-standard shape functions. This corresponds to $L^2$ projection with a
-lumped mass matrix and is computed once per run. The resulting
-$\tilde g^{ij}$ inherits the same regularity class as the unmodified
-$g^{ij}$, and the $\tilde\alpha$ projection is unchanged at the
-implementation level.
-
-\subsection{Boundary treatment}
-
-At boundary nodes adjacent to curved geometry, an isotropic target
-$W_h$ can conflict with geometric constraints. Where this occurs we
-align one principal direction of $W_h$ tangent to the boundary,
-leaving the magnitude prescribed by the local sizing. Details are
-deferred to the implementation section.
+then interpolate via the standard shape functions. The resulting
+$W_h \in V_h^p$ is $C^0$, so $\tilde g^{ij} = W_h g^{ij} W_h^T$
+inherits \emph{only} the jumps already present in $g^{ij}$, which
+the $\tilde\alpha$-projection handles as before. The averaging
+itself is cheap: it is a lumped-mass $L^2$ projection onto $V_h^p$,
+equivalent to area-weighted nodal averaging. A full (non-lumped)
+$L^2$ projection would require an additional global mass-matrix
+solve but is not necessary, since the Winslow-like operator is
+relatively insensitive to moderate blur in the target metric.
 
 \subsection{Numerical Results/Tests}
+\label{sec:W-numerical}
 
-In order to test the effectiveness of this $W$:
-\begin{itemize}
-	\item Repeat the experiments \texttt{w2.m} and \texttt{w2\_3d.m} with a skewed but valid reference mesh of the unit/cube. Observe that the current Persson-Fortunato setting will behave correspondingly according to the reference mesh. 
-	\item Implement $W$ modification. Check that this makes the physical mesh truly agnostic to the quality of the skewed (but for now, still valid/untangled) reference mesh. 
-\end{itemize}
+We first run the unskewed \texttt{w2.m} setup of Section~0.1 through
+the $W$-modified solver (\texttt{w2\_W.m}). The reference mesh,
+boundary perturbation, and polynomial order are identical to
+\texttt{w2.m}; only $g^{ij}$ is replaced by
+$\tilde g^{ij} = W_h\, g^{ij}\, W_h^T$, with $W_h$ obtained by full
+(consistent) $L^2$ projection of the equilateral-target $W_K$ onto
+$V_h^p$---the variant closest to the original 2016 formulation. The result
+is in Figure~\ref{fig:w2_W}, to be compared directly to
+Figure~\ref{fig:w2}.
 
-Our main test is the \texttt{w2\_skewed} configuration introduced in
-Section~0.1 (Figure~\ref{fig:w2_skewed} and the associated quality
-histograms): a structured $11 \times 11$ reference with a single
-displaced interior vertex. Unmodified Fortunato--Persson produces a
-valid physical mesh that nonetheless inherits the reference's sliver
-cluster as its worst element. In what follows we assess how the
-$W$-modification modifies this outcome.
+The smoothed mesh has $\min J = -4.4 \times 10^{-4}$: two interior
+elements are slightly inverted (highlighted in red in
+Figure~\ref{fig:w2_W}(\subref{fig:smoothed-W})), where \texttt{w2.m}
+produced $\min J = +3.1 \times 10^{-3}$ and all elements valid. A
+regression test (\texttt{w\_regression.m}) verifies that
+$W_h \equiv I$ reproduces the unmodified solver bit-for-bit, so the
+inversion is from the formulation, not the implementation.
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}[b]{0.32\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{w2_W/mesh_reference.png}
+  \caption{Reference mesh.}
+  \label{fig:ref-W}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{w2_W/mesh_tangled.png}
+  \caption{Initial configuration.}
+  \label{fig:tangled-W}
+\end{subfigure}
+\hfill
+\begin{subfigure}[b]{0.32\textwidth}
+  \centering
+  \includegraphics[width=\textwidth]{w2_W/mesh_smoothed.png}
+  \caption{After $W$-modified Winslow}
+  \label{fig:smoothed-W}
+\end{subfigure}
+\caption{\texttt{w2\_W}: the \texttt{w2.m} setup run through the
+$W$-modified Picard solver with $W_h$ constructed by consistent
+$L^2$ projection onto $V_h^p$. (\subref{fig:ref-W}) and
+(\subref{fig:tangled-W}) are identical to their counterparts in
+Figure~\ref{fig:w2}. In (\subref{fig:smoothed-W}) the two
+\textcolor{red}{red} elements (centroids $(0.46, 0.37)$ and
+$(0.50, 0.47)$) have $\min J < 0$, so the $W$-modified output is
+inverted on a problem where the original 2016 formulation produced
+a valid mesh.}
+\label{fig:w2_W}
+\end{figure}
+
+
 
 \subsection{Numerical experiments with the $W$-modification (negative result)}
 \label{sec:W-experiments}

@@ -1,21 +1,24 @@
-function W_h = compute_Wh_nodal(msh, shape, projection, weighting)
-% Lumped L2 projection of the per-element constant W_K to a nodal
-% field W_h, returned as (ns, d, d, nt) replicated on the DG nodes.
+function W_h = compute_Wh_nodal(msh, shape, projection, method, weighting)
+% L2 projection of the per-element constant W_K to a nodal field
+% W_h, returned as (ns, d, d, nt) replicated on the DG nodes.
 %
 %   shape = 'equilateral' (default) | 'right'         -- ideal element
-%   projection = 'vhp' (default) | 'p1'
-%   weighting per element w(K):
-%       'area'     (default) w(K) = |K|, classical lumped L2 (notes Eq. 9)
-%       'eta'                w(K) = eta_K  (boosts distorted elements)
+%   projection = 'vhp' (default) | 'p1'               -- target space
+%   method = 'full' (default) | 'lumped'              -- mass matrix
+%       'full'   solves M W_h = b with the consistent CG mass matrix M,
+%                matching the alpha-projection of the original FP code.
+%       'lumped' replaces M by its row-sum diagonal, reducing the solve
+%                to weighted nodal averaging (Gemini's Eq. 9 form).
+%   weighting per element w(K) (lumped method only):
+%       'area'     (default) w(K) = |K|
+%       'eta'                w(K) = eta_K
 %       'etam1'              w(K) = max(eta_K - 1, eps)
 %       'eta2'               w(K) = eta_K^2
-%
-% At each CG node x_n:
-%   W_h(x_n) = sum_{K ni x_n} w(K) W_K  /  sum_{K ni x_n} w(K).
 
 if nargin < 2, shape = 'equilateral'; end
 if nargin < 3, projection = 'vhp'; end
-if nargin < 4, weighting = 'area'; end
+if nargin < 4, method = 'full'; end
+if nargin < 5, weighting = 'area'; end
 
 d  = size(msh.p, 1);
 nt = size(msh.t, 2);
@@ -49,21 +52,57 @@ absK = wK;  % rebind: lumped sums below use absK as the weight
 
 switch projection
 case 'vhp'
-    % Lumped L2 projection onto the full CG space V_h^p via mapdg2cg.
     q = mapdg2cg(msh.p1);                    % q(i + ns*(it-1)) = CG index
     n_cg = max(q);
 
-    numW = zeros(d, d, n_cg);
-    denW = zeros(1, n_cg);
-    for it = 1:nt
-        w_contrib = absK(it) * W_K(:, :, it);
-        for i = 1:ns
-            cg = q(i + ns*(it-1));
-            numW(:, :, cg) = numW(:, :, cg) + w_contrib;
-            denW(cg) = denW(cg) + absK(it);
+    switch method
+    case 'full'
+        % Full (consistent) L2 projection onto V_h^p:  M * W_CG = b,
+        % component-wise in W. Assemble M with dgmass_ml and b by
+        % quadrature of (phi_i * W_K) over each element.
+        data = dginit(msh);
+        M = dgmass_ml(msh, data);
+        phi_g = permute(data.gfs(:,1,:), [1,3,2]);   % (ns, ngauss)
+        J = geojac(msh, data);                        % (ngauss, nt)
+
+        intphi = zeros(ns, nt);
+        for it = 1:nt
+            mul = data.gw .* J(:,it) / 2;
+            intphi(:, it) = phi_g * mul;              % int_K phi_i dx
         end
+
+        W_CG = zeros(d, d, n_cg);
+        for a = 1:d
+            for b = 1:d
+                rhs = zeros(n_cg, 1);
+                for it = 1:nt
+                    wab = W_K(a, b, it);
+                    for i = 1:ns
+                        cg = q(i + ns*(it-1));
+                        rhs(cg) = rhs(cg) + intphi(i, it) * wab;
+                    end
+                end
+                W_CG(a, b, :) = M \ rhs;
+            end
+        end
+
+    case 'lumped'
+        % Lumped L2 projection: weighted nodal averaging by absK(it).
+        numW = zeros(d, d, n_cg);
+        denW = zeros(1, n_cg);
+        for it = 1:nt
+            w_contrib = absK(it) * W_K(:, :, it);
+            for i = 1:ns
+                cg = q(i + ns*(it-1));
+                numW(:, :, cg) = numW(:, :, cg) + w_contrib;
+                denW(cg) = denW(cg) + absK(it);
+            end
+        end
+        W_CG = numW ./ reshape(denW, 1, 1, []);
+
+    otherwise
+        error('compute_Wh_nodal: unknown method ''%s''', method);
     end
-    W_CG = numW ./ reshape(denW, 1, 1, []);
 
     W_h = zeros(ns, d, d, nt);
     for it = 1:nt

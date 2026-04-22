@@ -25,6 +25,7 @@ if ~exist(figdir, 'dir'), mkdir(figdir); end
 % --- Figure 1: skewed reference mesh ------------------------------------
 figure(1); clf;
 dgmeshplot_curved(msh, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_reference.png'), 'Resolution', 200);
 
@@ -43,6 +44,7 @@ msh_tangled.p1 = curvep1;
 % --- Figure 2: tangled initial configuration ----------------------------
 figure(2); clf;
 dgmeshplot_curved(msh_tangled, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_tangled.png'), 'Resolution', 200);
 
@@ -53,6 +55,7 @@ msh1 = elliptic_smoothing(msh, curvep1, doplot);
 % --- Figure 3: final smoothed mesh --------------------------------------
 figure(3); clf;
 dgmeshplot_curved(msh1, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_smoothed.png'), 'Resolution', 200);
 

@@ -1,43 +1,39 @@
-% w2_skewed.m - Baseline test for the W-modification experiment.
+% w2_skewed_W.m - w2_skewed.m with the W-modification.
 %
-% Starts from w2.m's structured 11x11 mesh, applies a smooth nonlinear
-% coordinate stretch  xi -> xi + 0.3*xi*(1-xi)*eta  to skew the reference
-% geometry (valid, variable Jacobian, not an affine shear). Applies the
-% standard w2 boundary perturbation on side 4 and runs unmodified
-% Winslow. Goal: verify that reference skew propagates into the smoothed
-% physical mesh -- i.e. that there is actually something for the
-% W-modification to fix.
+% Same skewed reference (one moved interior vertex creating a sliver
+% cluster) and same boundary perturbation as
+% demos/original-formulation/w2_skewed.m. Smoother replaced by
+% elliptic_smoothing_W with a nodal W_h from an ideal equilateral
+% triangle. Starting point:
+%   - projection = 'vhp'
+%   - method     = 'full'
+% Saves the same three mesh figures plus I/eta histograms to
+% figures/w2_skewed_W/.
 
 porder = 4;
 n = 10;
 msh = mshsquare(n+1, n+1);
 msh = nodealloc(msh, porder);
 
-figdir = 'figures/w2_skewed';
+% Move one interior vertex to create a sliver cluster at (0.8, 0.8).
+moves = [0.8, 0.8,  0.72, 0.79];
+[~, ix] = min(vecnorm(double(msh.p) - moves(1:2)', 2, 1));
+msh.p(:, ix) = moves(3:4);
+msh = nodealloc(msh, porder);
+
+% Nodal W_h from equilateral ideal, V_h^p + full consistent L2 projection.
+msh.W_h = compute_Wh_nodal(msh, 'equilateral', 'vhp', 'full');
+
+figdir = 'figures/w2_skewed_W';
 if ~exist(figdir, 'dir'), mkdir(figdir); end
 
-% --- Skew the reference: move one linear vertex to create a single -------
-% sliver cluster in the top-right.
-moves = [
-    0.8, 0.8,  0.72, 0.79;
-];
-for k = 1:size(moves, 1)
-    from = moves(k, 1:2)';
-    to   = moves(k, 3:4)';
-    [~, ix] = min(vecnorm(double(msh.p) - from, 2, 1));
-    msh.p(:, ix) = to;
-end
-msh = nodealloc(msh, porder);  % rebuild p1 from the modified p
-
-fprintf('Reference mesh skew: min J = %.4g\n', min(geojac(msh), [], 'all'));
-
-% --- Figure 1: skewed reference ------------------------------------------
+% --- Figure 1: skewed reference mesh ------------------------------------
 figure(1); clf;
 dgmeshplot_curved(msh, 4, 1, 0);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_reference.png'), 'Resolution', 200);
 
-% --- Boundary perturbation on side 4 (same as w2) -----------------------
+% --- Boundary perturbation on side 4 (same as w2_skewed.m) --------------
 [~, edg] = getbndnodes(msh, dginit(msh), 4);
 x = msh.p1(:,1,:);
 y = msh.p1(:,2,:);
@@ -55,30 +51,26 @@ dgmeshplot_curved(msh_tangled, 4, 1, 0);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_tangled.png'), 'Resolution', 200);
 
-% --- Run unmodified Winslow ---------------------------------------------
+% --- Run W-modified Winslow ---------------------------------------------
 doplot = false;
-msh1 = elliptic_smoothing(msh, curvep1, doplot);
+msh1 = elliptic_smoothing_W(msh, curvep1, doplot);
 
-% --- Figure 3: smoothed (baseline) --------------------------------------
+% --- Figure 3: final smoothed mesh --------------------------------------
 figure(3); clf;
 dgmeshplot_curved(msh1, 4, 1, 0);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_smoothed.png'), 'Resolution', 200);
 
-% --- Quality metrics per element: scaled J + shape distortion eta --------
-% eta is the Liu-Joe inverse mean-ratio shape distortion metric,
-% eta = |J|_F^2 / (d * |det J|^(2/d)), range [1, inf),
-% with eta = 1 for conformal elements (see Shi-Persson 2020, Eq. 2).
+% --- Quality histograms: scaled Jacobian I and shape distortion eta -----
 [I_ref, eta_ref] = qualmetrics2d(msh);
 [I_tan, eta_tan] = qualmetrics2d(msh_tangled);
-[I_sm,  eta_sm]  = qualmetrics2d(msh1);
+[I_sm,  eta_sm ] = qualmetrics2d(msh1);
 
 fprintf('\n              reference    tangled     smoothed\n');
 fprintf('min  I      %10.4g  %10.4g  %10.4g\n', min(I_ref), min(I_tan), min(I_sm));
 fprintf('max  eta    %10.4g  %10.4g  %10.4g\n', max(eta_ref), max(eta_tan), max(eta_sm));
 fprintf('mean eta    %10.4g  %10.4g  %10.4g\n', mean(eta_ref), mean(eta_tan), mean(eta_sm));
 
-% Scaled Jacobian histograms
 Iall = [I_ref(:); I_tan(:); I_sm(:)];
 edges_I = linspace(min(Iall), 1, 40);
 configs = {
@@ -96,7 +88,6 @@ for k = 1:3
     exportgraphics(gcf, fullfile(figdir, configs{k,3}), 'Resolution', 200);
 end
 
-% Shape distortion metric histograms (Liu-Joe / Shi-Persson Eq. 2)
 etaall = [eta_ref(:); eta_tan(:); eta_sm(:)];
 edges_eta = linspace(1, quantile(etaall, 0.99), 40);
 configs = {
@@ -118,22 +109,17 @@ fprintf('\nSaved figures to %s/\n', figdir);
 
 
 function [I, eta] = qualmetrics2d(msh)
-% Per-element scaled Jacobian I = min J / max J (Fortunato-Persson 2016)
-% and Liu-Joe shape distortion eta = |J|_F^2 / (d |det J|^(2/d))
-% (Shi-Persson 2020, Eq. 2), both worst-case over Gauss points.
 d = size(msh.p, 1);
 data = dginit(msh);
 p1x = permute(msh.p1(:,1,:), [1,3,2]);
 p1y = permute(msh.p1(:,2,:), [1,3,2]);
 phiX = permute(data.gfs(:,2,:), [1,3,2]);
 phiY = permute(data.gfs(:,3,:), [1,3,2]);
-xX = phiX' * p1x;
-xY = phiY' * p1x;
-yX = phiX' * p1y;
-yY = phiY' * p1y;
-detJ = xX .* yY - xY .* yX;                                 % (ngauss, nt)
-Jfro2 = xX.^2 + xY.^2 + yX.^2 + yY.^2;                      % |J|_F^2
-etap = Jfro2 ./ (d * max(abs(detJ), eps).^(2/d));           % |J|_F^2 / (d |detJ|^(2/d))
-I   = (min(detJ, [], 1) ./ max(detJ, [], 1))';              % per element
-eta = (max(etap, [], 1))';                                   % per element (worst-case)
+xX = phiX' * p1x;  xY = phiY' * p1x;
+yX = phiX' * p1y;  yY = phiY' * p1y;
+detJ = xX .* yY - xY .* yX;
+Jfro2 = xX.^2 + xY.^2 + yX.^2 + yY.^2;
+etap = Jfro2 ./ (d * max(abs(detJ), eps).^(2/d));
+I   = (min(detJ, [], 1) ./ max(detJ, [], 1))';
+eta = (max(etap, [], 1))';
 end

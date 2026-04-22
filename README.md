@@ -76,4 +76,41 @@ Because the scaled Jacobian `I` is blind to straight-sided distortion
 reference distortion by the smoothed output is exactly the failure
 mode that motivates the `W`-modification.
 
-## ADD NEXT BLOCK OF EXPERIMENTS.
+## `w2_W.m`, `w2_skewed_W.m` — the `W`-modified formulation
+
+The next batch of experiments modifies the split-form metric
+`g^ij → g̃^ij = W_h g^ij W_h^T`, where `W_h` is a continuous nodal
+field built from per-element target Jacobians mapping an ideal
+equilateral triangle to each reference element. The smoother's
+Picard structure is left unchanged; only the right-hand side
+assembly sees the modification.
+
+**Auxiliary functions** (live at the project root):
+
+- `elliptic_smoothing_W.m` — a copy of `elliptic_smoothing.m` with
+  an `isfield(msh, 'W_h')` guard inside `sm1alpha2d`/`sm12d`. When
+  `msh.W_h` is not set, the code runs the 2016 formulation
+  bit-for-bit; otherwise it substitutes `g̃^ij` as described above.
+- `compute_WK_simplex.m` — builds the per-element constant `W_K`
+  from the straight-sided reference corners and an ideal element
+  (default: equilateral simplex).
+- `compute_Wh_nodal.m` — projects `W_K` onto a nodal `W_h` field in
+  `V_h^p` (default) or `V_h^1`, using either a full consistent mass
+  matrix (default, matching the original `α`-projection) or a
+  lumped-mass (`Eq. 9`-style area-weighted) simplification.
+
+**Drivers** (live in `demos/w-formulation/` and save figures to
+`demos/w-formulation/figures/<script>/`):
+
+- `w2_W.m` — `w2.m` run through the `W`-modified solver. Starting
+  point closest to the 2016 formulation: `V_h^p + full consistent
+  mass`. First result is that this produces two interior elements
+  with `min J < 0` on a problem where the unmodified solver
+  produces a valid mesh.
+- `w2_skewed_W.m` — `w2_skewed.m` run through the same `W`-modified
+  solver. The main test: does the `W`-modification cancel the
+  sliver distortion the unmodified solver inherits from the
+  reference?
+- `w_regression.m` — bit-for-bit regression. Verifies that
+  `W_h = I` produces the exact same output as `elliptic_smoothing`.
+  Run after any change to the W machinery.

@@ -18,6 +18,7 @@ if ~exist(figdir, 'dir'), mkdir(figdir); end
 % --- Figure 1: reference mesh -------------------------------------------
 figure(1); clf;
 dgmeshplot_curved(msh, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
 set(gcf, 'Position', [114 1 560 420]);
 exportgraphics(gcf, fullfile(figdir, 'mesh_reference.png'), 'Resolution', 200);
 
