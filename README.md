@@ -1,40 +1,14 @@
-# 2026-winslow-smoothing
-
-Experiments extending the Winslow-Picard high-order mesh smoother of
+Experiments attempting extending the Winslow high-order mesh smoother of
 Fortunato & Persson (*JCP* 2016) with a `W`-modification intended to
 decouple the smoothed physical mesh from the shape of the reference
 (computational) mesh.
 
-## Repo layout
+## `w1.m` and `w2.m` — the original Fortunato–Persson paradigm
 
-- `dgmatlab/` — Per-Olof Persson's DG toolkit (shipped unchanged, minus a
-  pure-MATLAB replacement for `dgmass` since the bundled MEX binaries do
-  not run on Apple Silicon; the replacement is `dgmass_ml.m` at the repo
-  root).
+- `init.m` — sets the MATLAB path; run before any demo.
 - `elliptic_smoothing.m` — the 2016 Fortunato–Persson Winslow-Picard
   smoother (minor patch at the project root to call `dgmass_ml` instead
   of the MEX `dgmass`).
-- `elliptic_smoothing_W.m` — copy of the above with the `W`-modification
-  guarded behind `isfield(msh, 'W_h')`; falls back to the unmodified
-  code when `msh.W_h` is absent.
-- `compute_WK_simplex.m` — per-element `W_K` from straight-sided corners
-  to an ideal (equilateral) simplex.
-- `compute_Wh_nodal.m` — lumped L² projection of `W_K` onto a continuous
-  nodal field `W_h` (P¹ or full V_h^p, with area / η / η²-style
-  weightings).
-- `demos/` — MATLAB scripts documenting the experiments below.
-- `notes/winslow-notes.tex` — the companion writeup.
-- `init.m` — sets the MATLAB path; run before any demo.
-
-## Running
-
-```matlab
-run('init.m')
-cd demos
-w2
-```
-
-## `w1.m` and `w2.m` — the original Fortunato–Persson paradigm
 
 These two scripts reproduce the unmodified 2016 formulation: given a
 valid (untangled) **reference mesh**, prescribe a boundary perturbation
@@ -66,3 +40,5 @@ side~4), and `mesh_smoothed.png` (the Winslow-iterated result, with
 all elements valid). This is the canonical
 reference-mesh-is-good / physical-mesh-starts-tangled test and is the
 starting point for all the subsequent experiments in this repo.
+
+## ADD NEXT BLOCK OF EXPERIMENTS.
