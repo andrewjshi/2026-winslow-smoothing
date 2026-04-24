@@ -14,6 +14,7 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{booktabs}
+\usepackage{multirow}
 \usepackage{hyperref}
 
 \hypersetup{
@@ -826,6 +827,40 @@ distortion over each curved element. In the present pipeline we do
 not need that generalisation because the mesh entering the
 optimisation step is straight-sided by construction.
 
+\paragraph{Extension: sliding the target boundary.}
+A natural extension is to drop the assumption that the boundary
+vertices are held fixed on $\partial P$. Instead, each boundary
+vertex is allowed to slide tangentially along the target boundary,
+keeping it on $\partial P$ but freeing its arc-length position.
+For a circular target the boundary vertex is parameterised by an
+angle $\theta_i$ and its position becomes
+$(\cos \theta_i, \sin \theta_i)$; the objective gradient is
+extended through the chain rule. For a polygonal target each
+boundary vertex is parameterised by an arc-length along its
+currently-assigned edge, with corners pinned so that vertices
+cannot cross between edges. The added degrees of freedom let the
+optimiser redistribute boundary vertices to break the clumping
+that Tutte's uniform arc-length parameterisation can produce
+against the input topology.
+
+\textbf{When the physical domain is convex (or close to it), this
+extension is an unalloyed improvement.} The reference-mesh
+quality rises across the board (on the examples below, mean
+$\eta^2$ drops by $\sim 45\%$ and the worst element falls by
+comparable amounts), and because the reference and physical
+boundaries have comparable geometry, the downstream
+Fortunato--Persson solver transports the improvement cleanly to
+the physical mesh. For non-convex physical domains with sharp
+concave features, the benefit is more nuanced: sliding tends to
+concentrate boundary vertices near a few regions that, under the
+proportional-arc map to the physical boundary, sit at the
+physical domain's concave neighbourhoods. Clustering near a
+physical concave corner can produce sliver elements whose effect
+on the final mesh outweighs the reference-quality gain. For the
+rest of this section we retain the pinned-boundary formulation as
+the primary pipeline; the sliding variant is optional and can be
+toggled per example.
+
 \subsection{Promotion to high-order reference}
 \label{sec:tutte-highorder}
 
@@ -1012,7 +1047,162 @@ reproducing (\subref{fig:unstr-pipeline-opt}).
   \label{fig:unstr-pipeline}
 \end{figure}
 
-\subsubsection{Example 3: non-convex L-shape, two target shapes}
+\subsubsection{Example 3: smooth non-convex starfish}
+\label{sec:tutte-ex-starfish}
+
+Next: a smoothly curved, strongly non-convex boundary with no
+corners. We take a five-armed starfish,
+\begin{equation*}
+  r(\theta) \;=\; 1 + 0.40\,\cos(5\theta) + 0.03\,\sin(2\theta),
+  \qquad
+  (x, y) \;=\; r(\theta)\,(\cos\theta, \sin\theta),
+\end{equation*}
+with the principal $\cos(5\theta)$ term producing the five arms
+and the small $\sin(2\theta)$ modulation breaking exact 5-fold
+symmetry. The arm-to-bay radial ratio is $\sim 2.3\!:\!1$, so
+the arms are pronounced. We run the pipeline with the unit disk
+as the Tutte target.
+
+Figure~\ref{fig:star-pipeline} shows the pipeline in two
+parallel variants: the no-shape-opt path (column~2, Tutte
+directly into Winslow) and the with-shape-opt path (column~3,
+Tutte $\to$ shape-opt $\to$ Winslow). Column~1 is the physical
+starfish used by both paths. To make the geometric effect
+legible we highlight the largest connected clump of
+near-boundary triangles in the bottom-right sector of the Tutte
+output and trace the same triangle indices (preserved through
+Tutte and shape optimisation, since only vertex positions
+change) back to the physical mesh.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{minipage}[c]{0.3\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{starfish_preview/mesh_clean.png}
+      \caption{Physical starfish. Red: an entire arm.}
+      \label{fig:star-clean}
+    \end{subfigure}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{0.3\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{starfish_preview/mesh_tutte_circle.png}
+      \caption{Tutte (disk).}
+      \label{fig:star-tutte}
+    \end{subfigure}\\[1em]
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{starfish_preview/mesh_winslow_from_tutte.png}
+      \caption{Winslow, direct from Tutte (no shape-opt).}
+      \label{fig:star-winslow-from-tutte}
+    \end{subfigure}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[c]{0.3\textwidth}
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{starfish_preview/mesh_optimized_circle.png}
+      \caption{After shape-opt.}
+      \label{fig:star-opt}
+    \end{subfigure}\\[1em]
+    \begin{subfigure}{\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{starfish_preview/mesh_winslow_circle.png}
+      \caption{Winslow, after shape-opt.}
+      \label{fig:star-winslow}
+    \end{subfigure}
+  \end{minipage}
+  \caption{Starfish pipeline with unit-disk target. The $27$
+  highlighted triangles fill one arm of the physical starfish
+  (\subref{fig:star-clean}). Column~2 is the
+  \emph{no-shape-opt path}: Tutte lays the arm's boundary
+  vertices onto a thin angular wedge of the disk
+  (\subref{fig:star-tutte}), producing an inward sliver fan, and
+  Winslow transports that fan back to the physical arm
+  (\subref{fig:star-winslow-from-tutte}) where it unwinds into a
+  decent radial fan of moderate-aspect-ratio triangles.
+  Column~3 is the \emph{with-shape-opt path}: shape optimisation
+  (\subref{fig:star-opt}) compresses the wedge slightly but
+  cannot reshape its sliver structure with the boundary pinned;
+  Winslow then transports the polished wedge back to a similar
+  radial fan (\subref{fig:star-winslow}). Shape-opt's contribution
+  is a modest improvement of the worst element on the physical
+  mesh ($\min|J|$ $0.0011\!\to\!0.0026$), not a qualitative
+  change; Winslow does most of the work.}
+  \label{fig:star-pipeline}
+\end{figure}
+
+\paragraph{What is going wrong.}
+Each arm of the physical starfish is a long, narrow protrusion
+occupying roughly $1/5$ of the total area. Its perimeter share
+is comparable (arms and bays have similar arc length), so
+Tutte's proportional-arc-length mapping assigns the arm roughly
+$2\pi/5$ of the disk's angular extent. On the physical domain
+the arm's $27$~triangles had reasonable shapes because the arm's
+2D geometry---long radially, moderate tangentially---accommodated
+them. On the disk they must fit inside a thin angular wedge
+bounded by the arm's two boundary arcs on~$\partial P$. The
+triangles connecting the arm's boundary to the disk's interior
+become long thin wedges emanating inward---the sliver fan of
+Figure~\ref{fig:star-pipeline}(\subref{fig:star-tutte}).
+
+\paragraph{Why shape optimisation cannot fix this.}
+The fixed-boundary shape optimisation of
+Section~\ref{sec:tutte-shape} can only move interior vertices.
+It cannot move the arm's boundary vertices from their
+Tutte-assigned positions on~$\partial P$, and it cannot rewire
+the graph. Redistributing boundary density (which would require
+\emph{boundary sliding}) and flipping the long diagonals of
+adjacent slivers (which would require \emph{topological
+modification}) are both outside its reach. The residual
+near-boundary slivers in
+Figure~\ref{fig:star-pipeline}(\subref{fig:star-opt}) are
+structural to this step's feasible set, not a convergence
+failure.
+
+\paragraph{The general principle.}
+For a convex target~$P$, a physical protrusion must fit into an
+angular wedge of~$P$ whose opening is set by the protrusion's
+perimeter share, not its area share. Unless those two shares
+match---they do not, for elongated
+protrusions---the interior triangles inside the protrusion get
+compressed tangentially into slivers on the reference. The
+Winslow step (\subref{fig:star-winslow}) undoes this
+compression when the physical boundary is smooth: the slivered
+wedge stretches back out along the arm and the elements recover
+moderate aspect ratios. This graceful transport is not
+guaranteed in general; in later examples we will encounter
+cases where it breaks down.
+
+\paragraph{Aside: what shape optimisation actually optimises.}
+Comparing the Winslow outputs with and without shape-opt reveals
+a subtlety about the objective. Shape optimisation minimises
+$\sum_K \eta_K^2$, and the Liu--Joe distortion $\eta$ is
+\emph{scale-invariant}: an equilateral triangle has $\eta = 1$
+whether it is tiny or huge. Shape-opt therefore has no
+preference between ``many small equilateral triangles'' and
+``a few large equilateral triangles plus some boundary
+slivers''---it can trade the first for the second if the
+aggregate $\sum \eta^2$ is lower. By $\eta$-based metrics the
+shape-opt pipeline wins cleanly on our starfish run: mean
+$\eta^2 = 3.51$ versus $6.84$ without shape-opt; maximum
+$\eta = 4.70$ versus $10.46$. But visually, the no-shape-opt
+output can appear \emph{more uniform} in element size, because
+its triangles are smaller and more similarly sized across the
+domain. Visual size uniformity is not what $\sum \eta^2$
+measures. If uniform element size is the goal---for a
+presentation figure or for a downstream solver that prefers
+homogeneous discretisation---a different objective is
+appropriate: $\sum \eta^2 + \lambda\,\mathrm{var}(\mathrm{area}_K)$
+is the simplest size-aware modification; a Gargallo-Peir\'o-style
+regularised distortion with an area target is a more principled
+one. Within the current pipeline, shape-opt remains correct as
+a local-shape objective but should not be read as a
+``visually best mesh'' objective.
+
+\subsubsection{Example 4: non-convex L-shape, two target shapes}
 \label{sec:tutte-ex-lshape}
 
 The next incremental step is a non-convex polygonal domain. We take
@@ -1038,7 +1228,7 @@ $0.08$; Figure~\ref{fig:l-setup}(\subref{fig:l-tangled})).
     \caption{After violent interior tangling.}
     \label{fig:l-tangled}
   \end{subfigure}
-  \caption{Construction of the Example~3 input: a clean
+  \caption{Construction of the Example~4 input: a clean
   constrained Delaunay triangulation of the L-shape
   (\subref{fig:l-clean}), with its interior linear and high-order
   nodes perturbed to produce the tangled input of the pipeline
@@ -1160,154 +1350,6 @@ fighting the reference.
   \eta$ than the square-target output of
   Figure~\ref{fig:l-square-pipeline}.}
   \label{fig:l-circle-pipeline}
-\end{figure}
-
-\subsubsection{Example 4: smooth non-convex blob}
-\label{sec:tutte-ex-blob}
-
-The next step is a smoothly curved boundary with no corners at all.
-We take the parametric blob
-\begin{equation*}
-  r(\theta) \;=\; 1 + 0.30\sin(3\theta) + 0.15\cos(5\theta)
-                    + 0.10\sin(7\theta),
-\end{equation*}
-centred and scaled to fit in $[-0.9, 0.9]^2$. The boundary is
-smoothly non-convex: three large lobes with shallow valleys
-between them, no sharp corners anywhere. The physical boundary is
-discretised as a piecewise-linear polygon at the high-order node
-spacing---the first example in which the target curve is being
-\emph{approximated}, not sampled at its corners.
-
-Figure~\ref{fig:blob-setup} constructs the input: a clean
-constrained Delaunay of the blob (\subref{fig:blob-clean}), then a
-violent interior tangle at linear amplitude $0.4$ and high-order
-amplitude $0.12$, leaving the boundary alone
-(\subref{fig:blob-tangled}).
-
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.45\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_clean.png}
-    \caption{Clean blob constrained Delaunay.}
-    \label{fig:blob-clean}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.45\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
-    \caption{After violent interior tangling.}
-    \label{fig:blob-tangled}
-  \end{subfigure}
-  \caption{Construction of the Example~4 input.}
-  \label{fig:blob-setup}
-\end{figure}
-
-\paragraph{Unit-square target.}
-Figure~\ref{fig:blob-square-pipeline}: Tutte produces a valid
-reference on the square, shape optimisation smooths it, and
-Winslow maps back to the blob. All elements remain valid. The
-output has visible sliver clustering along the lobes where the
-linear approximation of the smooth boundary is forced into
-alignment with the four artificial corners of the square target.
-
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
-    \caption{Tangled input.}
-    \label{fig:blob-sq-input}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_tutte_square.png}
-    \caption{Tutte (square).}
-    \label{fig:blob-sq-tutte}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_optimized_square.png}
-    \caption{Shape-opt.}
-    \label{fig:blob-sq-opt}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_winslow_square.png}
-    \caption{Winslow.}
-    \label{fig:blob-sq-winslow}
-  \end{subfigure}
-  \caption{Blob pipeline with unit-square target. Valid output,
-  but slivers cluster in the lobes where the smooth boundary was
-  forced to align with four corners of the reference.}
-  \label{fig:blob-square-pipeline}
-\end{figure}
-
-\paragraph{Unit-disk target.}
-Figure~\ref{fig:blob-circle-pipeline}: the smooth blob boundary
-maps onto the smooth unit circle with no corner-alignment
-artefacts, and the final Winslow output is cleanly shaped in the
-bulk. However, a new weakness of the method becomes visible here,
-most clearly in the Tutte output (\subref{fig:blob-ci-tutte}):
-\textbf{the boundary vertices are redistributed uniformly around
-$\partial P$, and the barycentric solve pulls interior vertices
-toward the mean of their neighbours, leaving a thin annular layer
-of compressed, boundary-hugging sliver elements immediately inside
-$\partial P$}. This is structural to Tutte: a boundary vertex's
-first interior neighbour sits roughly at the average of the
-boundary-neighbour positions, which is a short chord inwards from
-the boundary, so the element between them is short in the radial
-direction and long tangentially. Shape optimisation
-(\subref{fig:blob-ci-opt}) pulls some interior vertices outward
-and thins the layer, but it cannot eliminate it while boundary
-vertex positions are pinned and the graph neighbourhood is
-fixed---the ring persists as visible boundary-adjacent slivers in
-the final Winslow output (\subref{fig:blob-ci-winslow}). This
-boundary-layer artefact is the price of using a convex target
-with uniform arc-length boundary parameterisation; a
-size-aware boundary parameterisation (matching the input's local
-boundary-edge lengths) would relieve it at the cost of complicating
-the pipeline.
-
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
-    \caption{Tangled input.}
-    \label{fig:blob-ci-input}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_tutte_circle.png}
-    \caption{Tutte (circle).}
-    \label{fig:blob-ci-tutte}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_optimized_circle.png}
-    \caption{Shape-opt.}
-    \label{fig:blob-ci-opt}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}[b]{0.24\textwidth}
-    \centering
-    \includegraphics[width=\textwidth]{blob_tangled/mesh_winslow_circle.png}
-    \caption{Winslow.}
-    \label{fig:blob-ci-winslow}
-  \end{subfigure}
-  \caption{Blob pipeline with unit-disk target. No corner-alignment
-  artefacts, but a thin annular layer of boundary-hugging sliver
-  elements is visible in the Tutte output
-  (\subref{fig:blob-ci-tutte}) and partially reduced but not
-  removed by shape optimisation
-  (\subref{fig:blob-ci-opt}).}
-  \label{fig:blob-circle-pipeline}
 \end{figure}
 
 \iffalse  % commented out: annulus pipeline removed from repo (cut_to_disk.m + annulus_tutte.m deleted)
@@ -1611,6 +1653,198 @@ on a recognised high-order CFD benchmark. The comb is included
 here as the motivating example of what goes wrong when the fix
 is omitted.
 \fi  % end commented-out comb example
+
+
+\subsection{How to Present to Persson}
+\label{sec:tutte-present}
+
+
+\subsubsection*{The setup}
+
+Fortunato--Persson 2016 assumes a valid straight-sided reference
+mesh is handed to you as input. 
+Our motivation and question: I want to use Fortunato-Persson as is. As a black box.
+Can we construct the reference a valid and well shaped reference from
+the physical-domain boundary and the topology of the physical
+mesh, ignoring the actual physical positions of the vertex. 
+
+\subsubsection*{The pipeline}
+
+\begin{enumerate}
+  \item Input: a physical mesh (possibly tangled), or just a
+    boundary polygon + linear-vertex topology from a Delaunay.
+  \item \textbf{Tutte's barycentric embedding}: fix boundary
+    vertices on a convex target $P$ (unit circle or unit square);
+    interior vertices are the Laplacian solution. Straight-line
+    embedding with no inverted elements, guaranteed by Tutte (1963).
+  \item \textbf{Shape optimisation} on the straight-sided Tutte
+    output: minimise $\sum_K \eta_K^2$ over interior-vertex
+    positions (boundary pinned), using BFGS with the equilateral
+    triangle as the ideal.
+  \item \textbf{High-order promotion} via \texttt{nodealloc}.
+  \item \textbf{Winslow hand-off}: run the original
+    Fortunato--Persson 2016 solver on the Step~1 input, using the
+    result of Step~4 as the reference---our constructed
+    well-shaped reference mesh.
+\end{enumerate}
+
+\subsubsection*{Walking through the examples}
+
+\begin{itemize}
+  \item \textbf{Example~1 (Section~\ref{sec:tutte-ex-w2}): regular
+    grid from \texttt{w2.m}.} Sanity check. The tangled input's
+    underlying topology is a regular $11 \times 11$ grid of
+    right-isosceles triangles; Tutte recovers exactly that grid
+    from the topology alone, and shape-opt starts at a stationary
+    point because the uniform grid is already a local minimum of
+    $\sum_K \eta_K^2$. The Winslow hand-off then reproduces the
+    canonical \texttt{w2.m} output.
+
+  \item \textbf{Example~2 (Section~\ref{sec:tutte-ex-unstructured}):
+    unstructured Delaunay on the unit square.} Here the physical
+    domain and the Tutte target are both the unit square, so the
+    Winslow step is trivial: given the constructed reference
+    mesh, Winslow recovers it unchanged (identity map). The
+    interesting part is the \emph{Tutte solve and shape-opt}.
+    Unlike Example~1 the topology is unstructured (random
+    interior points, varying valences), so Tutte's Laplacian
+    system is genuinely non-trivial and shape optimisation has
+    real work to do to turn the Laplacian embedding into a
+    well-shaped triangulation. This example validates the Tutte
+    $+$ shape-opt sub-pipeline as a reference-mesh generator in
+    isolation from Winslow.
+
+  \item \textbf{Example~3 (Section~\ref{sec:tutte-ex-starfish}):
+    smooth non-convex starfish.} The first case where every
+    stage is doing non-trivial work.
+    \emph{Key difficulty}: each arm has a perimeter share
+    comparable to the bays' but occupies roughly $1/5$ of the
+    area, so Tutte's proportional-arc mapping compresses each
+    arm onto a thin angular wedge of the disk, producing an
+    inward fan of slivers
+    (Fig.~\ref{fig:star-pipeline}\subref{fig:star-tutte}).
+    Shape-opt cannot un-compress those wedges because the
+    boundary is pinned; it only polishes interior positions.
+    \emph{How it still works}: Winslow's reference-to-physical
+    map has bounded distortion on smooth boundaries, and the
+    local Jacobian---radially-stretching, tangentially-gentle in
+    an arm---composes with the slivered reference triangles to
+    produce moderate-aspect-ratio triangles on the physical arms
+    (Fig.~\ref{fig:star-pipeline}\subref{fig:star-winslow}).
+    The pipeline outputs a clean physical mesh despite the
+    unflattering intermediate geometry.
+    \emph{Cost of shape-opt}: the BFGS optimiser runs
+    $\sim 250$ iterations with analytic gradients, and $\sum
+    \eta^2$ drops by roughly half on the reference. By
+    $\eta$-based metrics the shape-opt pipeline wins (mean
+    $\eta^2$ $3.51$ vs $6.84$; max $\eta$ $4.70$ vs $10.46$).
+    But the ablation in
+    Fig.~\ref{fig:star-pipeline}\subref{fig:star-winslow-from-tutte}
+    shows the no-shape-opt Winslow output is visually comparable
+    and can even look more uniform in element size---because
+    $\eta$ is scale-invariant, shape-opt has no preference for
+    equally-sized elements, only for equally-\emph{shaped} ones.
+    See Section~\ref{sec:tutte-ex-starfish} for the detailed
+    discussion and implications for size-aware objectives.
+\end{itemize}
+
+\subsubsection*{What works cleanly}
+
+\begin{itemize}
+  \item \textbf{Simply connected smooth non-convex domains (the
+    starfish).} The pipeline produces dramatically cleaner
+    physical meshes than the raw Delaunay input. The Winslow
+    step transports the reference mesh back to the physical
+    domain smoothly, and the per-arm sliver fans on the disk
+    unwind into decent radial fans on the arms. The remaining
+    artefact---a boundary-adjacent sliver ring on the disk, one
+    sliver fan per physical arm---is structural to the
+    convex-target choice and motivates the sliding / flipping
+    extensions.
+  \item \textbf{Simply connected with narrow pointy appendages}
+    (hand, star, dolphin fluke). Tutte's theorem requires the
+    linear-vertex graph to be $3$-connected; pointy convex corners
+    produce degree-$2$ boundary vertices that violate this. Fix:
+    detect degree-$2$ boundary vertices, plant an interior anchor
+    nudged inward from the boundary. Systematic detection,
+    closed-form fix, works without manual tuning.
+\end{itemize}
+
+\subsubsection*{Extensions we explored}
+
+\begin{itemize}
+  \item \textbf{Boundary sliding in shape optimisation.} Let
+    boundary vertices slide tangentially along $\partial P$ during
+    the optimisation (angles for circle, arc-lengths for polygon).
+    Produces substantially better reference-mesh quality: on the
+    L-shape, $\sum \eta^2$ drops by $\sim 45\%$ relative to the
+    pinned-boundary version.
+  \item \textbf{Proportional-arc Tutte + corner pinning + derive.}
+    When the reference boundary slides, the Winslow hand-off
+    loses reference--physical correspondence and Picard diverges.
+    Fix: (i) map the input's boundary onto $\partial P$ by
+    proportional arc length so domain corners land at
+    topologically-correct places; (ii) pin those corners during
+    shape optimisation so they don't drift; (iii) at hand-off
+    time, \emph{derive} the physical-boundary Dirichlet data
+    from the slid reference via proportional-arc mapping rather
+    than reusing the input's sampling. The derive step is the
+    component that makes Winslow converge; the others ensure the
+    derived physical domain retains its correct geometry.
+\end{itemize}
+
+\subsubsection*{Where it breaks}
+
+\begin{itemize}
+  \item \textbf{Simply connected with sharp concave corners (L-shape).}
+    The sliding extension improves reference quality, but the
+    proportional-arc map transports boundary clustering from the
+    reference onto the physical, and clustered vertices at a
+    physical concave corner produce sliver outliers. Net effect
+    on the L-shape: sliding improves the reference mesh
+    ($\sum \eta^2$ down), but the final Winslow output is
+    \emph{worse} than the pinned-boundary pipeline at the worst
+    element (max $\eta$ jumps from $6.7$ to $16.5$). Pinned
+    Winslow stays the primary pipeline for this class of domain.
+  \item \textbf{Multiply connected domains.} Tutte requires a
+    topological disk. A hole-slitting preprocess (\texttt{cut\_to\_disk})
+    is the classical remedy; we implemented and removed it.
+    Currently out of scope.
+\end{itemize}
+
+\subsubsection*{Open directions}
+
+\begin{itemize}
+  \item \textbf{Edge flipping + smoothing alternation.} Lawson's
+    flipping algorithm terminates at the Delaunay of the current
+    vertex positions; alternating it with shape optimisation is
+    known to drive $\sum \eta^2$ close to a local minimum that is
+    ``as good as it gets'' for the fixed vertex set on the
+    reference. Cheap to add, likely big win on the reference,
+    unclear how much propagates to the physical.
+  \item \textbf{Angle-gap barrier in sliding.} Soft penalty on
+    clustering in the slide step so that the beneficial
+    redistribution happens without the pathological clustering at
+    concave-corner regions on the physical.
+  \item \textbf{Physical-aware shape-opt objective.} Instead of
+    minimising $\sum \eta^2$ on the reference, minimise a proxy
+    for the post-Winslow mesh quality (e.g., $\sum \eta^2$
+    evaluated on the derived physical boundary). Addresses the
+    reference-vs-physical mismatch directly rather than working
+    around it.
+\end{itemize}
+
+\subsubsection*{Honest framing of the contribution}
+
+We are extending empirical FP-2016 to the case of
+reference-mesh-from-scratch. We inherit the same
+``works-in-practice-on-our-test-cases'' standard as the 2016 paper;
+we do not prove convergence or optimality. The scope is simply
+connected 2D domains, with specific remedies for narrow
+appendages (anchoring) and curved targets (\texttt{msh.fd}
+hookup). Boundary sliding is a further extension that is an
+unalloyed improvement for convex or smooth physical domains, and
+a more nuanced tradeoff for sharp-cornered non-convex ones.
 
 
 \bibliographystyle{plain}

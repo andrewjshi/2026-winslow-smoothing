@@ -119,35 +119,114 @@ fprintf('\ntangled input:\n'); print_quality(msh_tangled);
 plot_mesh(msh_tangled, fullfile(figdir, 'mesh_tangled.png'));
 
 % ---------------------------------------------------------------------
-% Step 3: Tutte + shape-opt pipeline, two target shapes.
+% Step 3: for each (target in {square, circle}) x (slide in {pinned,
+% slide}), run Tutte + shape-opt + Winslow hand-off, and record quality
+% metrics at both the reference-mesh stage (post shape-opt) and the
+% physical-mesh stage (post Winslow).
 % ---------------------------------------------------------------------
+summary = struct('target', {}, 'mode', {}, 'stage', {}, ...
+    'mean_eta', {}, 'max_eta', {}, 'mean_eta2', {}, 'max_eta2', {});
+
+square_corners = [0 1 1 0; 0 0 1 1];
+
+% Identify the 6 L-shape domain corners in the linear-vertex list of
+% msh_tangled. These are the anchor points for circle sliding: they are
+% pinned on the circle at proportional-arc positions (set up by
+% tutte_embedding), and their physical positions stay at the L-shape
+% corners.
+lshape_corners = [0 0; 1 0; 1 0.5; 0.5 0.5; 0.5 1; 0 1];
+n_lc = size(lshape_corners, 1);
+lshape_corner_idx = zeros(n_lc, 1);
+for k = 1:n_lc
+    [~, lshape_corner_idx(k)] = min(vecnorm( ...
+        msh_tangled.p' - lshape_corners(k,:), 2, 2));
+end
+
 for target_shape = {'square', 'circle'}
     ts = target_shape{1};
     fprintf('\n=== target: %s ===\n', ts);
 
     msh_t = tutte_embedding(msh_tangled, 'TargetShape', ts);
     msh_t = nodealloc(msh_t, porder);
-
     fprintf('after Tutte:\n'); print_quality(msh_t);
     plot_mesh(msh_t, fullfile(figdir, sprintf('mesh_tutte_%s.png', ts)));
 
-    [msh_o, info] = optimize_shape(msh_t);
-    msh_o = nodealloc(msh_o, porder);
+    for mode_cell = {'pinned', 'slide'}
+        mode = mode_cell{1};
+        fprintf('\n--- %s / %s ---\n', ts, mode);
 
-    fprintf('after shape-opt:\n'); print_quality(msh_o);
-    fprintf('  F_init = %.4e, F_final = %.4e, iterations = %d\n', ...
-            info.F_initial, info.F_final, info.iterations);
-    plot_mesh(msh_o, fullfile(figdir, sprintf('mesh_optimized_%s.png', ts)));
+        if strcmp(mode, 'pinned')
+            [msh_r, info] = optimize_shape(msh_t);
+        elseif strcmp(ts, 'square')
+            [msh_r, info] = optimize_shape(msh_t, ...
+                'SlideBoundary', 'polygon', 'TargetCorners', square_corners);
+        else
+            % Circle slide with L-shape corners pinned on the circle at
+            % their proportional-arc positions.
+            [msh_r, info] = optimize_shape(msh_t, ...
+                'SlideBoundary', 'circle', ...
+                'PinBoundaryNodes', lshape_corner_idx);
+        end
+        msh_r = nodealloc(msh_r, porder);
 
-    % Winslow: optimised Tutte as reference, tangled input's L-shape
-    % boundary as Dirichlet data.
-    curvep1 = msh_o.p1;
-    is_bnd_dg_ref = boundary_dg_mask(msh_o);
-    curvep1(is_bnd_dg_ref) = msh_tangled.p1(is_bnd_dg_ref);
-    msh_w = elliptic_smoothing(msh_o, curvep1, false);
+        fprintf('after shape-opt (%s):\n', mode); print_quality(msh_r);
+        fprintf('  F_init = %.4e, F_final = %.4e, iters = %d\n', ...
+                info.F_initial, info.F_final, info.iterations);
+        if strcmp(mode, 'pinned')
+            plot_mesh(msh_r, fullfile(figdir, ...
+                sprintf('mesh_optimized_%s.png', ts)));
+        else
+            plot_mesh(msh_r, fullfile(figdir, ...
+                sprintf('mesh_optimized_%s_slide.png', ts)));
+        end
+        summary(end+1) = pack_row(ts, mode, 'shape-opt', msh_r);
 
-    fprintf('after Winslow:\n'); print_quality(msh_w);
-    plot_mesh(msh_w, fullfile(figdir, sprintf('mesh_winslow_%s.png', ts)));
+        % Winslow hand-off.
+        %
+        % Pinned mode: Dirichlet data is the tangled input's L-shape
+        % boundary, i.e., the uniform arc-length sampling of the original L.
+        %
+        % Slide mode (circle only): derive NEW L-shape boundary positions
+        % that correspond to the slid circle positions via proportional
+        % arc-length mapping. This keeps the reference-physical
+        % correspondence consistent so pinned Winslow converges.
+        is_bnd_dg_ref = boundary_dg_mask(msh_r);
+        curvep1 = msh_r.p1;
+        if strcmp(mode, 'slide') && strcmp(ts, 'circle')
+            msh_phys_new = derive_physical_from_slid_circle( ...
+                msh_r, msh_tangled, porder, lshape_corner_idx(1));
+            curvep1(is_bnd_dg_ref) = msh_phys_new.p1(is_bnd_dg_ref);
+        else
+            curvep1(is_bnd_dg_ref) = msh_tangled.p1(is_bnd_dg_ref);
+        end
+        try
+            msh_w = elliptic_smoothing(msh_r, curvep1, false);
+            fprintf('after Winslow (%s):\n', mode); print_quality(msh_w);
+            if strcmp(mode, 'pinned')
+                plot_mesh(msh_w, fullfile(figdir, ...
+                    sprintf('mesh_winslow_%s.png', ts)));
+            else
+                plot_mesh(msh_w, fullfile(figdir, ...
+                    sprintf('mesh_winslow_%s_slide.png', ts)));
+            end
+            summary(end+1) = pack_row(ts, mode, 'winslow', msh_w);
+        catch err
+            fprintf('Winslow FAILED (%s / %s): %s\n', ts, mode, err.message);
+            summary(end+1) = struct('target', ts, 'mode', mode, ...
+                'stage', 'winslow-FAIL', ...
+                'mean_eta', NaN, 'max_eta', NaN, ...
+                'mean_eta2', NaN, 'max_eta2', NaN);
+        end
+    end
+end
+
+% --- Summary table ---
+fprintf('\n=== quality summary (per element) ===\n');
+fprintf('  %-8s  %-6s  %-10s  %8s  %8s  %10s  %10s\n', ...
+    'target', 'mode', 'stage', 'mean_eta', 'max_eta', 'mean_eta2', 'max_eta2');
+for s = summary
+    fprintf('  %-8s  %-6s  %-10s  %8.4f  %8.4f  %10.4f  %10.4f\n', ...
+        s.target, s.mode, s.stage, s.mean_eta, s.max_eta, s.mean_eta2, s.max_eta2);
 end
 
 fprintf('\nSaved figures to %s/\n', figdir);
@@ -160,6 +239,123 @@ fprintf('  nelem = %d\n', numel(eta));
 fprintf('  eta   : min = %.4g, mean = %.4g, max = %.4g\n', ...
         min(eta), mean(eta), max(eta));
 fprintf('  I     : min = %.4g  (I<=0 => inverted)\n', min(I));
+end
+
+
+function msh_phys_new = derive_physical_from_slid_circle(msh_r, msh_tangled, porder, ref_v)
+% Given a shape-opt output `msh_r` with boundary linear vertices on the
+% unit circle (some slid), derive new L-shape boundary positions via
+% proportional arc-length mapping and return a physical mesh with those
+% new boundary positions. `ref_v` is a linear-vertex index of a PINNED
+% boundary vertex (e.g., an L-shape corner) used as the arc-length
+% reference. Using a pinned vertex is essential: its angle on the circle
+% is unchanged by sliding, so the cum_arc reference frame doesn't drift.
+
+bnd_v = extract_bnd_loop(msh_r);
+if signed_area_local(msh_r.p(:, bnd_v)) < 0
+    bnd_v = flip(bnd_v);
+end
+% Rotate bnd_v so that ref_v is first
+i_ref = find(bnd_v == ref_v, 1);
+if isempty(i_ref)
+    error('derive_physical_from_slid_circle: ref_v not found on boundary.');
+end
+bnd_v = bnd_v([i_ref:end, 1:i_ref-1]);
+nbnd = numel(bnd_v);
+
+% Cumulative arc length on the ORIGINAL L-shape perimeter (waypoint at
+% each boundary linear vertex, interpolated linearly between).
+edge_lens = vecnorm( ...
+    msh_tangled.p(:, bnd_v([2:end, 1])) - msh_tangled.p(:, bnd_v), 2, 1)';
+cum_arc = [0; cumsum(edge_lens)];
+P = cum_arc(end);
+
+% Slid angles on circle, relative to bnd_v(1) so we don't pick up an
+% arbitrary offset. The angle of bnd_v(1) is already 0 by construction of
+% the proportional-arc Tutte embedding, but we subtract anyway.
+slid_pos = msh_r.p(:, bnd_v);
+th = atan2(slid_pos(2,:), slid_pos(1,:))';
+th_rel = mod(th - th(1), 2*pi);
+th_rel(1) = 0;
+
+s_new = th_rel * P / (2*pi);
+
+new_bnd_pos = zeros(2, nbnd);
+for i = 1:nbnd
+    s = s_new(i);
+    k = find(cum_arc(1:end-1) <= s & s < cum_arc(2:end), 1);
+    if isempty(k), k = nbnd; end
+    denom = cum_arc(k+1) - cum_arc(k);
+    if denom < 1e-12
+        frac = 0;
+    else
+        frac = (s - cum_arc(k)) / denom;
+    end
+    p1 = msh_tangled.p(:, bnd_v(k));
+    p2 = msh_tangled.p(:, bnd_v(mod(k, nbnd) + 1));
+    new_bnd_pos(:, i) = p1 + frac * (p2 - p1);
+end
+
+msh_phys_new = msh_tangled;
+msh_phys_new.p(:, bnd_v) = new_bnd_pos;
+msh_phys_new = nodealloc(msh_phys_new, porder);
+end
+
+
+function bnd_v = extract_bnd_loop(msh)
+t = double(msh.t) + 1;
+t2t = double(msh.t2t);
+edges = [];
+for it = 1:size(t, 2)
+    for j = 1:size(t2t, 1)
+        if t2t(j, it) < 0
+            v = t(:, it); v(j) = [];
+            edges = [edges; v(:)'];  %#ok<AGROW>
+        end
+    end
+end
+nedges = size(edges, 1);
+bnd_v = zeros(nedges, 1);
+bnd_v(1) = edges(1, 1);
+curr = edges(1, 2);
+used = false(nedges, 1);
+used(1) = true;
+for k = 2:nedges
+    bnd_v(k) = curr;
+    for ie = 1:nedges
+        if used(ie), continue; end
+        if edges(ie, 1) == curr
+            curr = edges(ie, 2); used(ie) = true; break;
+        elseif edges(ie, 2) == curr
+            curr = edges(ie, 1); used(ie) = true; break;
+        end
+    end
+end
+end
+
+
+function s = signed_area_local(p)
+n = size(p, 2);
+s = 0;
+for k = 1:n
+    kn = mod(k, n) + 1;
+    s = s + p(1, k) * p(2, kn) - p(1, kn) * p(2, k);
+end
+s = s / 2;
+end
+
+
+function row = pack_row(target, mode, stage, msh)
+[eta, ~] = quality(msh);
+row = struct('target', target, 'mode', mode, 'stage', stage, ...
+    'mean_eta', mean(eta), 'max_eta', max(eta), ...
+    'mean_eta2', mean(eta .^ 2), 'max_eta2', max(eta .^ 2));
+end
+
+
+function val = mean_eta2(msh)
+[eta, ~] = quality(msh);
+val = mean(eta .^ 2);
 end
 
 

@@ -1,7 +1,8 @@
-function msh1=elliptic_smoothing(msh,newp1,doplot)
+function msh1=elliptic_smoothing(msh,newp1,doplot,sliding_spec)
 
 if nargin<2, newp1=msh.p1; msh=nodealloc(msh,msh.porder); end
 if nargin<3, doplot=false; end
+if nargin<4, sliding_spec=[]; end
 
 D=size(msh.p,1);
 msh1=msh;
@@ -19,13 +20,60 @@ N=size(W,1);
 
 F=zeros(N,D);
 newp=W*reshape(permute(newp1,[1,3,2]),[],size(newp1,2));
-bnd=[e,newp(e,:); c,newp(c,:)];
-bnd=[e,newp(e,:)];
+
+% Classify boundary nodes for sliding: if sliding_spec.corners is provided
+% (domain corners in CCW order), boundary nodes near one of the corners
+% stay pinned, all other boundary nodes are "sliding" --- they are freed
+% from Dirichlet during each PDE solve and then projected back onto their
+% assigned straight edge after the solve.
+slide_nodes   = [];
+slide_edge_ab = [];    % (M, 4) rows [ax ay bx by]
+if ~isempty(sliding_spec) && isfield(sliding_spec,'corners')
+    corners = sliding_spec.corners;
+    K = size(corners,1);
+    edges_ab = [corners, corners([2:K,1],:)];  % (K, 4)
+    corner_tol = 1e-6;
+    pinned_mask = false(length(e),1);
+    slide_edge_idx = zeros(length(e),1);
+    for ii = 1:length(e)
+        p = newp(e(ii),:);
+        if min(vecnorm(corners - p, 2, 2)) < corner_tol
+            pinned_mask(ii) = true;
+            continue;
+        end
+        best_ei = -1; best_d = inf;
+        for ei = 1:K
+            a = edges_ab(ei,1:2); b = edges_ab(ei,3:4);
+            ab = b - a; ap = p - a;
+            tt = max(0, min(1, (ap*ab')/(ab*ab')));
+            d  = norm(p - (a + tt*ab));
+            if d < best_d, best_d = d; best_ei = ei; end
+        end
+        slide_edge_idx(ii) = best_ei;
+    end
+    pinned_e = e(pinned_mask);
+    bnd = [pinned_e, newp(pinned_e,:)];
+    slide_nodes   = e(~pinned_mask);
+    slide_edge_ab = edges_ab(slide_edge_idx(~pinned_mask),:);
+    fprintf('  Sliding Winslow: %d pinned, %d sliding (of %d boundary nodes).\n', ...
+        length(pinned_e), length(slide_nodes), length(e));
+else
+    bnd=[e,newp(e,:)];
+end
 
 u=W*reshape(permute(msh.p1,[1,3,2]),[],size(msh.p1,2));
 for iter=1:100
   uold=u;
   u=sm1(msh,data,u,bnd);
+  % Project sliding boundary nodes onto their assigned edges
+  for si = 1:length(slide_nodes)
+    ni = slide_nodes(si);
+    a  = slide_edge_ab(si,1:2);
+    b  = slide_edge_ab(si,3:4);
+    ab = b - a; ap = u(ni,:) - a;
+    tt = max(0, min(1, (ap*ab')/(ab*ab')));
+    u(ni,:) = a + tt*ab;
+  end
   uerror=norm(u(:)-uold(:));
   fprintf('  Smoothing, iteration %d: Norm = %16.12f\n',iter,uerror);
   if uerror<1e-7, break; end

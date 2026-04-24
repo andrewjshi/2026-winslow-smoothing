@@ -26,6 +26,7 @@ function msh_out = tutte_embedding(msh, varargin)
 opts.TargetCorners    = [0 1 1 0; 0 0 1 1];   % unit square, CCW
 opts.TargetShape      = '';                    % '' | 'square' | 'circle'
 opts.PreserveBoundary = false;
+opts.CircleMapping    = 'proportional';        % 'proportional' | 'uniform'
 for k = 1:2:numel(varargin)
     opts.(varargin{k}) = varargin{k+1};
 end
@@ -45,7 +46,15 @@ nbnd  = numel(bnd_v);
 if opts.PreserveBoundary
     target_bnd = msh.p(:, bnd_v);
 elseif strcmpi(opts.TargetShape, 'circle')
-    theta = 2*pi * (0:nbnd-1)' / nbnd;
+    if strcmpi(opts.CircleMapping, 'uniform')
+        theta = 2*pi * (0:nbnd-1)' / nbnd;
+    else
+        % Proportional-arc-length mapping (default).
+        edge_lens = vecnorm( ...
+            msh.p(:, bnd_v([2:end, 1])) - msh.p(:, bnd_v), 2, 1)';
+        cum_arc = [0; cumsum(edge_lens)];
+        theta = 2*pi * cum_arc(1:end-1) / cum_arc(end);
+    end
     target_bnd = [cos(theta)'; sin(theta)'];
 elseif strcmpi(opts.TargetShape, 'square') || isempty(opts.TargetShape)
     corners = [0 1 1 0; 0 0 1 1];
@@ -84,6 +93,19 @@ p_new(:, int_v)    = x_int';
 
 msh_out      = msh;
 msh_out.p    = p_new;
+
+% For a circle target, install the unit-circle signed-distance function
+% and mark all boundary segments as curved. This tells downstream
+% `nodealloc` / `smoothdgnodes` to project DG boundary nodes onto the
+% true circle arc rather than leaving them linearly interpolated along
+% the polygon of linear vertices. (The square target is naturally
+% polygonal, so no curved-boundary flagging is needed.)
+if strcmpi(opts.TargetShape, 'circle')
+    msh_out.fd = @(p) sqrt(sum(p.^2, 2)) - 1;
+    msh_out.fdargs = {};
+    bnd_labels = unique(double(-msh_out.t2t(msh_out.t2t < 0)));
+    msh_out = mshcurved(msh_out, bnd_labels);
+end
 end
 
 
