@@ -6,6 +6,7 @@
 \graphicspath{%
   {../demos/original-formulation/figures/}%
   {../demos/w-formulation/figures/}%
+  {../demos/tutte/figures/}%
 }
 \usepackage{amsmath, amssymb, bm}
 \usepackage{listings}
@@ -510,154 +511,1103 @@ a valid mesh.}
 \label{fig:w2_W}
 \end{figure}
 
+\paragraph{Running the same modification on the skewed reference
+(\texttt{w2\_skewed\_W.m}).}
+Applying the same $W$-modified solver to the \texttt{w2\_skewed}
+setup of Section~0.1---the sliver-cluster reference---produces
+qualitatively different behaviour: the Picard iteration does not
+converge. After an initial residual of $\approx 5$, successive
+iterates oscillate in the range $0.4$--$5$ for roughly thirty
+steps, then amplify to residuals of $20$--$90$, and finally hit
+the $100$-iteration cap with no sign of settling. The unmodified
+solver, by contrast, converges cleanly on the same setup in
+$14$ iterations (Figure~\ref{fig:w2_skewed}). The divergence is
+not an implementation artefact; \texttt{w\_regression.m} continues
+to pass.
 
+This is the failure mode anticipated qualitatively in
+Section~\ref{sec:W-continuity}, where we noted that the jumps of
+$W_K$ (or, more generally, the gradient of $W_h$) are
+\emph{external} to the iterate and do not decay with Picard,
+unlike the jumps of $g^{ij}$ which shrink as $\partial x_h /
+\partial \xi$ smooths. The product-rule expansion of
+$\tilde\alpha_j = -\partial_i \tilde g^{ij}$ makes this concrete.
+With $\tilde g^{ij} = W_h^{ik} g^{kl} W_h^{jl}$,
+\begin{equation}
+  \tilde\alpha_j
+  \;=\; -\,W_h^{ik} W_h^{jl}\,\partial_i g^{kl}
+       \;-\; 2\,(\partial_i W_h) \cdot g \cdot W_h.
+  \label{eq:tildealpha-split}
+\end{equation}
+The first term is the original $\alpha$ conjugated by $W_h$.
+Like the unmodified $\alpha$, it is driven by jumps in
+$\partial x / \partial \xi$, which shrink as $x_h$ relaxes toward
+its fixed point---the iteration's self-limiting smoothing. The
+second term is \emph{entirely new} and is independent of the
+current iterate: $W_h$ is fixed once by the reference geometry,
+so $\partial_i W_h$ never decays with Picard. When the reference
+mesh is uniform, $W_h$ is a constant field, $\partial_i W_h = 0$,
+and this new term vanishes---which is why \texttt{w2\_W.m}
+converges and only exhibits a mild fixed-point inconsistency (the
+two inverted interior elements) rather than an iteration-level
+failure. When the reference contains a sliver patch, $W_h$ varies
+sharply across a handful of elements and $\partial_i W_h$ is
+locally large; the new term contributes a persistent,
+iteration-independent forcing to $\tilde\alpha$ that neither the
+$V_h^p$ projection nor the Picard loop can absorb.
 
-\subsection{Numerical experiments with the $W$-modification (negative result)}
-\label{sec:W-experiments}
+Functionally, $\tilde\alpha_j$ is the advection coefficient in the
+$x$-equation
+$\partial_i(\tilde g^{ij}\partial_j x_k)
+ + \tilde\alpha_j\,\partial_j x_k = 0$.
+Large, persistent $\tilde\alpha$ pushes the operator into the
+advection-dominated regime that standard continuous Galerkin
+treats badly without stabilisation (SUPG, upwinding, etc.), and in
+the Picard loop manifests as an increasingly-noisy update that
+eventually exceeds the iteration's natural contraction rate. The
+failure in \texttt{w2\_skewed\_W.m} is therefore not a quirk of
+our particular discretisation choice but a consequence of the
+$W$-modification itself once $\partial W_h \neq 0$.
 
-We implemented the split-form modification of
-Section~\ref{sec:W-mod}---literally substituting
-$\tilde g^{ij} = W_K g^{-1} W_K^T$ in place of $g^{ij}$ in both
-\texttt{sm1alpha2d} and \texttt{sm12d} of the Picard solver---and ran
-it on the single-sliver test of Figure~\ref{fig:w2_skewed}. The
-implementation lives in \texttt{elliptic\_smoothing\_W.m}, with the
-per-element $W_K$ built by \texttt{compute\_WK\_simplex.m} from an
-ideal equilateral triangle. A regression test
-(\texttt{demos/w\_regression.m}) verifies that the modified solver
-reproduces the unmodified output bit-for-bit when
-$W_K = I$ at every element, so the wiring is trustworthy.
+This observation is important on its own, independent of any
+specific cure, because it explains why the scheme as literally
+written (following the Persson/Gemini exchange) cannot simply be
+``used''. The iteration's self-limiting coefficient smoothing,
+which is what makes the 2016 formulation so robust, is broken by
+the $W$-modification in exactly the regime the modification is
+supposed to help. Before attempting to stabilise the iteration,
+it is worth understanding this.
 
-The experimental conclusion is negative. The $W$-modification
-converges in most of the variants we tried, but none of them produce
-a smoothed mesh that is meaningfully better than the unmodified
-Winslow output on the sliver test. Below we report the specific
-variants we tried and why each fails.
+\subsection{Summary}
+\label{sec:W-summary}
 
-\paragraph{Piecewise-constant $W_K$.}
-The simplest implementation: feed the raw per-element $W_K$ directly
-into the substituted split form, with no smoothing across element
-interfaces. For the uniform unskewed reference mesh this already
-diverges: adjacent triangles in each cell of \texttt{mshsquare} have
-different corner orderings, so $W_K$ jumps by a rotation/reflection
-at every interior edge. The jumps in $\tilde g^{ij}$ that result are
-too large for the weak $\tilde\alpha$-projection to absorb, and the
-Picard iteration blows up. Restricting $W_K \neq I$ to only the four
-sliver-cluster elements, with $W_K = I$ everywhere else, also
-diverges---even four interfaces with a non-trivial jump are enough
-to destabilize.
+The $W$-modification of Section~\ref{sec:W-mod}, taken literally as
+the product-rule substitution $g^{ij} \mapsto W_h g^{ij} W_h^T$ in
+the 2016 split-form iteration, does not inherit the empirical
+robustness of the original formulation. Two reasons:
 
-\paragraph{Nodal projection onto $P^1$ (linear corners only).}
-As suggested in Section~\ref{sec:W-continuity}, we project $W_K$ to a
-continuous field $W_h$ by a lumped $L^2$ projection onto the linear
-corner vertices of the mesh (Eq.~\eqref{eq:Wnodal}), then interpolate
-linearly to all DG nodes for use at Gauss points. This stabilizes the
-Picard iteration but also washes the correction out. On the single-
-sliver test, the sliver reference vertex at
-$\xi = (0.72, 0.79)$ is mapped by the smoothed output to:
-$(0.7964, 0.79)$ under unmodified Winslow and
-$(0.8029, 0.79)$ under $W$-modified (P$^1$-projected) Winslow.
-The target (fully un-skewed) is $(0.8, 0.8)$. The unmodified solver
-already performs $96\%$ of the $x$-correction on its own by virtue of
-being a harmonic smoother; the $W$-modification contributes an
-additional $0.006$ shift, within the noise floor of the iteration.
-Neither method moves the $y$-coordinate at all, because the boundary
-perturbation in \texttt{w2.m} is purely in $x$ and the Winslow system
-decouples component-wise.
-Globally the $W$-modified output is in fact \emph{worse} than the
-unmodified one: $\max \eta = 19.2$ versus $7.17$, with the worst
-element having migrated from the sliver location to the lower-middle
-of the domain.
+\begin{enumerate}
+  \item \emph{Picard's self-limiting smoothing is broken.} The
+    product-rule expansion of $\tilde\alpha_j = -\partial_i
+    \tilde g^{ij}$ introduces a new term $-2\,(\partial_i W_h)
+    \cdot g \cdot W_h$ that is independent of the current iterate.
+    It persists as a smooth forcing in $\tilde\alpha$ that the
+    $L^2$ projection cannot absorb and that Picard cannot relax,
+    because it is not driven by $\partial x_h / \partial \xi$.
+    Wherever $W_h$ varies in space---which is exactly where the
+    modification is supposed to do useful work---this term makes
+    the $x$-equation advection-dominated and Picard
+    non-contractive. Empirically, a single moved interior vertex
+    in the \texttt{w2\_skewed} reference is enough to send the
+    iteration into oscillatory divergence. Smoothing $W_h$ via
+    lumped or consistent $L^2$ projection onto $V_h^p$ reduces the
+    magnitude of $\partial W_h$ locally but does not eliminate
+    it---projection trades interface spikes for interior gradients
+    of comparable integrated magnitude. The only way to set
+    $\partial W_h = 0$ is to take $W_h$ globally constant, which
+    defeats the purpose of the modification.
 
-\paragraph{Nodal projection onto $V_h^p$ (all CG nodes).}
-The notes' derivation (Section~\ref{sec:W-continuity}) places
-$W_h \in V_h^p$, i.e., on the full order-$p$ CG space, not just the
-linear corners. We implemented this variant as well. On the uniform
-unskewed mesh (\texttt{w2.m}) it converges but produces a smoothed
-mesh with $\min J = -2.6 \times 10^{-4}$, i.e.\ \emph{inverted}
-elements, on a problem where the unmodified solver has no difficulty.
-On the sliver test the iteration fails to converge altogether. Full
-$V_h^p$ preserves more of the per-element $W_K$ near element
-interiors and less of the corner averaging, and this extra
-expressiveness is enough to push the heuristic past stability.
+  \item \emph{There is no energy whose Euler--Lagrange equation is
+    the modified split form.} A gradient of a scalar functional
+    in~$x$ cannot have a non-zero iterate-independent piece, and
+    the $\partial W_h$ term is exactly that. This rules out any
+    natural variational interpretation in~$x$: there is no
+    Lyapunov function to certify convergence, no minimum principle
+    to guarantee non-inversion at the fixed point, and no standard
+    machinery (line search, backtracking, Newton with globalisation)
+    to stabilise the iteration. We are left with a heuristic
+    fixed-point scheme without convergence theory.
+\end{enumerate}
 
-\paragraph{Weighting schemes in the lumped projection.}
-Equation~\eqref{eq:Wnodal} uses the element area $|K|$ as the lumping
-weight. This down-weights slivers (which have small $|K|$) relative
-to their regular-sized neighbors, so the sliver's $W_K$ is largely
-drowned out in the projected $W_h$. We replaced $|K|$ by
-$\eta_K$, $\eta_K - 1$, and $\eta_K^2$ in an attempt to boost the
-sliver's contribution, but the sliver vertex image remained within
-$\pm 0.01$ of the unmodified result across all schemes, and global
-$\max \eta$ stayed between $19$ and $22$. The weighting choice does
-not meaningfully move the numerical outcome.
+The two observations are not independent: it is because the scheme
+is not a gradient that the $\partial W_h$ term can appear at all.
+What makes the 2016 formulation's Picard so robust is precisely the
+self-consistency condition $\alpha_j = -\partial_i g^{ij}$, which
+makes $\alpha$ a computed consequence of the iterate; the
+$W$-modification breaks this by forcing $\tilde\alpha$ to absorb an
+external contribution. No amount of adjusting the $W_h$ projection
+or the lumping recovers this structure. The modification is
+attractive on paper but the iteration machinery it was slotted into
+does not tolerate it.
 
-\paragraph{Sliver-only $W$.}
-Restricting $W_K \ne I$ to only the four sliver-cluster elements
-(identified by an $\eta$ threshold on the reference) and projecting
-only those via $P^1$ gives a sliver image of $(0.7966, 0.79)$---
-indistinguishable from the unmodified $(0.7964, 0.79)$. The
-averaging with the identity-valued $W_K$ of the surrounding elements
-at shared CG corners neutralizes the sliver correction almost
-entirely. The piecewise-constant and $V_h^p$ variants of this
-experiment both diverge.
+\section{Reference-mesh preprocessing via Tutte's embedding}
+\label{sec:tutte}
 
-\paragraph{Summary.}
-Table~\ref{tab:W-summary} collects the results. Across every variant
-we tried---three projection choices (piecewise constant, $P^1$,
-$V_h^p$), four lumping weights (area, $\eta$, $\eta - 1$, $\eta^2$),
-and a sliver-only mask---the $W$-modification either diverges, or
-converges to an output whose sliver image agrees with the unmodified
-Winslow result to within the iteration's noise floor. The reason is
-visible by inspection: the unmodified Winslow solver, being
-harmonic, already pulls the interior sliver vertex $96\%$ of the way
-back to the un-skewed target. Any projection that is stable enough
-to keep Picard converging is also one that averages the local $W_K$
-correction heavily with its identity-valued neighbors, leaving only
-a few-tenth-of-a-percent shift that cannot close the remaining $4\%$
-gap.
+Motivated by the negative findings of Section~\ref{sec:W-mod}, we
+take a different approach. Rather than modifying the Fortunato--Persson
+iteration to correct for a poor reference mesh, we commit to using
+the 2016 scheme \emph{as a black box} and instead construct a
+well-shaped reference mesh with the same topology.
 
-\begin{table}[htbp]
-\centering
-\caption{Sliver reference vertex $\xi=(0.72,0.79)$ image under
-different $W$-modification variants, on the single-sliver test of
-Figure~\ref{fig:w2_skewed}. ``Target'' denotes the un-skewed position
-$(0.8, 0.8)$. Unmodified Winslow is shown for reference.}
-\label{tab:W-summary}
-\begin{tabular}{lccc}
-\toprule
-variant & sliver image & global $\max \eta$ & notes \\
-\midrule
-unmodified Winslow & $(0.7964, 0.79)$ & $7.17$ & baseline \\
-piecewise-const $W_K$ & --- & --- & diverges \\
-$P^1$ projection, area weight & $(0.8029, 0.79)$ & $19.2$ & converges \\
-$P^1$ projection, $\eta$ weight & $(0.8010, 0.79)$ & $19.5$ & converges \\
-$P^1$ projection, $\eta^2$ weight & $(0.7937, 0.79)$ & $21.7$ & converges \\
-$P^1$ projection, $\eta-1$ weight & --- & --- & diverges \\
-$V_h^p$ projection & --- & --- & diverges or $\min J < 0$ \\
-sliver-only $W$, $P^1$ & $(0.7966, 0.79)$ & $7.05$ & $\approx$ unmodified \\
-sliver-only $W$, piecewise const & --- & --- & diverges \\
-sliver-only $W$, $V_h^p$ & --- & --- & diverges \\
-\midrule
-target (un-skewed) & $(0.80, 0.80)$ & --- & \\
-\bottomrule
-\end{tabular}
-\end{table}
+The whole chain is:given a possibly tangled, poorly shaped high-order 2D mesh, we
+produce a straight-sided reference mesh with the \emph{same
+connectivity} whose element shapes are as close to ideal as the
+topology permits, and then we feed that reference into the
+unmodified 2016 smoother with the original mesh's boundary as
+Dirichlet data.
 
-\paragraph{Interpretation.}
-This is consistent with the caveat already stated in
-Section~\ref{sec:W-heuristic}: the modified split form is not the
-Euler--Lagrange equation of any natural energy, and there is no
-discrete minimum principle guaranteeing that the Picard fixed point
-is a meaningful ``$W$-harmonic'' map. Empirically, for interior
-sliver defects on an otherwise well-shaped mesh, the $W$-modification
-as written in Section~\ref{sec:W-mod} does not deliver the
-reference-agnostic behaviour that the classical formulation
-lacks---it just reshuffles the distortion without reducing it.
-Whether the construction can be rescued by machinery outside the
-scope of Section~\ref{sec:W-mod} (for instance an anisotropic
-spatially-varying ideal, damped/continuation Picard, or a proper
-variational reformulation with an $H^1$-type energy in $x$) is an
-open question.
+The preprocessing chain has four steps, each taken up in a
+subsection below:
+
+\begin{enumerate}
+  \item \textbf{Extract the topology} (Section~\ref{sec:tutte-topology}).
+    Discard the positions of the input mesh and keep only its
+    combinatorial structure: the vertex list, the triangle list,
+    and the identification of boundary vertices.
+  \item \textbf{Tutte's barycentric embedding}
+    (Section~\ref{sec:tutte-embedding}). Map the boundary vertices
+    to a convex polygon (e.g.\ the unit square), then solve
+    Tutte's linear system for the interior vertex positions. The
+    output is a straight-sided planar mesh with the input topology,
+    guaranteed to have no inverted or degenerate elements.
+  \item \textbf{Mesh optimisation}
+    (Section~\ref{sec:tutte-shape}). \emph{The key observation
+    is that this step acts on a straight-sided, untangled mesh.}
+    The Tutte output of Step~2 is guaranteed to have straight
+    edges and positive element Jacobians, so standard mesh-quality
+    optimisation---which is notoriously ill-posed on tangled or
+    curved input---can be applied cleanly. We minimise a shape
+    functional (e.g.\ the Liu--Joe shape distortion
+    $\eta$~\eqref{eq:eta}) while keeping the topology fixed and
+    the vertex positions valid. This turns the ``valid but
+    possibly ugly'' Tutte output into a ``valid and well-shaped''
+    straight-sided reference candidate.
+  \item \textbf{Promotion to high order}
+    (Section~\ref{sec:tutte-highorder}). Apply \texttt{nodealloc}
+    to allocate the $V_h^p$ nodes on the straight edges of the
+    optimised mesh, producing a valid high-order reference mesh
+    that matches the input's polynomial degree.
+\end{enumerate}
+
+The resulting reference mesh is then used as the input to
+\texttt{elliptic\_smoothing.m} with the original (possibly tangled)
+mesh's boundary node positions as Dirichlet data. The 2016 scheme
+proceeds unmodified from that point.
+
+\subsection{Extracting the topology}
+\label{sec:tutte-topology}
+
+Given the input high-order mesh we discard its geometric data---both
+the linear vertex positions and the high-order node
+positions---and retain only its combinatorial structure: the list of
+triangles (triples of linear-vertex indices) and the identification
+of which edges lie on the exterior boundary. This is enough to run
+Tutte's algorithm, which operates on the abstract planar graph of
+the mesh. Whether the input positions were tangled, inverted, badly
+shaped, or perfectly valid is irrelevant at this stage: the data
+Tutte sees is the same list of vertices and the same list of
+triangle connectivities.
+
+Two structural assumptions on the input are required. First, the
+mesh must be topologically a disk---simply connected with a single
+exterior boundary. Second, its linear-vertex graph must be
+$3$-connected. Both are satisfied by any standard triangulation of a
+simply connected planar domain with more than three vertices. Given
+these, the boundary forms a single cyclic loop of linear vertices,
+which we extract by walking the edges whose faces have no neighbour
+in the triangle-to-triangle connectivity. All remaining vertices are
+classified as interior.
+
+\subsection{Tutte's barycentric embedding}
+\label{sec:tutte-embedding}
+
+\textbf{Tutte's theorem}~(1963): if the boundary vertices of a
+$3$-connected planar graph are pinned to a convex polygon and each
+interior vertex is placed at the centroid of its graph neighbours,
+then the resulting straight-line drawing is a valid planar
+embedding---no triangle is inverted or degenerate. The theorem is
+striking in that it produces a globally valid mesh from purely local
+barycentric conditions, with no optimisation loop, line search, or
+sign-of-Jacobian tracking.
+
+Given a chosen convex target polygon $P$ (the computational domain
+we want our reference mesh to live in), the $N$ boundary vertices
+extracted in Section~\ref{sec:tutte-topology} are distributed
+monotonically around~$\partial P$. Each interior vertex
+$\mathbf{x}_i$ is then required to satisfy
+\begin{equation}
+  \mathbf{x}_i \;=\; \frac{1}{\deg(i)} \sum_{j \sim i} \mathbf{x}_j,
+  \qquad i \in \text{interior},
+  \label{eq:tutte-bary}
+\end{equation}
+where the sum is over the linear-vertex neighbours $j$ of $i$ and
+$\deg(i)$ is the valence. Collecting one such equation per interior
+vertex and moving the known boundary contributions to the
+right-hand side gives the sparse linear system
+\begin{equation}
+  L_{\mathrm{ii}}\, \mathbf{x}_{\mathrm{int}}
+    \;=\; -\, L_{\mathrm{ib}}\, \mathbf{x}_{\mathrm{bnd}},
+  \label{eq:tutte-linear}
+\end{equation}
+where $L = D - A$ is the graph Laplacian of the linear-vertex
+connectivity ($D$ diagonal of valences, $A$ the adjacency matrix),
+$L_{\mathrm{ii}}$ is its restriction to interior--interior entries,
+and $L_{\mathrm{ib}}$ its restriction to interior--boundary entries.
+The system is symmetric positive definite, and each of the two
+spatial components of $\mathbf{x}$ is solved independently with a
+single sparse direct call.
+
+A few practical notes:
+\begin{itemize}
+  \item Uniform arc length around $\partial P$ is a reasonable
+    default when no additional sizing or alignment information is
+    available. Any monotone bijection from the input boundary loop
+    onto $\partial P$ works; replacing the uniform parameterisation
+    with a size-aware one (e.g.\ matching the input's local
+    boundary-edge lengths) is a mild extension.
+  \item Tutte's output is uniquely determined by the topology and
+    the boundary map. Distinct topologies produce distinct
+    embeddings; distinct boundary parameterisations of the same
+    topology produce distinct embeddings.
+  \item The output is valid in the sense that every triangle has
+    positive area, but it is not optimised for element shape.
+    Vertices with high or irregular valence, or whose graph
+    neighbourhood is highly asymmetric, typically produce
+    short-edge or long-edge triangles. Improving those shapes is
+    the job of Section~\ref{sec:tutte-shape}.
+\end{itemize}
+
+\subsection{Shape optimisation of the straight-sided mesh}
+\label{sec:tutte-shape}
+
+The Tutte output of Section~\ref{sec:tutte-embedding} is a valid
+straight-sided triangulation of the target polygon~$P$: boundary
+vertices are pinned to $\partial P$, interior vertices sit at
+Laplacian positions, every element has positive area. We now
+relocate the interior vertices to improve element shapes. Two
+features of this step make it tractable: the input is untangled
+(every element has positive area) and straight-sided (every Jacobian
+$J_K$ is a single $2 \times 2$ matrix per element). Both of these
+fail for the original input mesh---which is why this optimisation is
+deferred to after Tutte.
+
+On each element $K$, the Liu--Joe shape distortion of
+Equation~\eqref{eq:eta} reduces to
+\begin{equation}
+  \eta_K \;=\; \frac{\|J_K\|_F^2}{d\, |\det J_K|^{2/d}},
+  \qquad \eta_K \ge 1,
+\end{equation}
+where $J_K$ is the Jacobian of the affine map from the ideal
+(equilateral) simplex to $K$. For the present linear problem
+$J_K$ is an explicit, closed-form function of the three corner
+positions of $K$.
+
+We aggregate these per-element values into a single scalar
+objective over the interior-vertex positions $\mathbf{x}$:
+\begin{equation}
+  F(\mathbf{x}) \;=\; \sum_{K \in \mathcal{T}_h} \eta_K(\mathbf{x})^2.
+  \label{eq:tutte-F}
+\end{equation}
+Squaring, rather than taking the plain sum, has two practical
+effects. First, it penalises outlier elements quadratically, so a
+single near-degenerate element cannot hide inside a large overall
+sum of moderate values. Second, and more importantly, $\eta_K$
+diverges as $|\det J_K| \to 0$; the squared objective inherits this
+divergence and acts as an effective infinite barrier against
+element inversion. Because the Tutte output in
+Section~\ref{sec:tutte-embedding} gives a strictly positive Jacobian
+at every element, we start inside this barrier, and any descent
+direction that respects $F$ stays inside it.
+
+The problem is a standard unconstrained nonlinear optimisation over
+$\mathbb{R}^{2 n_{\mathrm{int}}}$ (two coordinates per interior
+vertex, boundary vertices held fixed). Gradients are
+analytic---$J_K$ is affine in the three corner positions, so
+$\eta_K$ is a rational function of the interior-vertex coordinates
+with explicit derivatives---and standard quasi-Newton solvers
+(L-BFGS, trust-region Newton, BFGS with Armijo line search) converge
+without special handling. The Tutte output is the initial guess.
+
+This is the straight-sided specialisation of the curved-element
+mesh optimisation problem of
+Shi--Persson~\cite{shi2023local}, whose Equation~(4) generalises
+$\eta_K$ to high-order elements by integrating a pointwise
+distortion over each curved element. In the present pipeline we do
+not need that generalisation because the mesh entering the
+optimisation step is straight-sided by construction.
+
+\subsection{Promotion to high-order reference}
+\label{sec:tutte-highorder}
+
+The output of Section~\ref{sec:tutte-shape} is a straight-sided
+linear triangulation of the target polygon~$P$: fixed topology
+inherited from the input, boundary vertices pinned, interior
+vertices placed at a minimiser of the discrete shape objective.
+Nothing about the high-order structure has been touched yet.
+
+Promoting to high order is trivial: run
+\texttt{nodealloc(msh, porder)} with the same polynomial order as
+the input mesh. The routine allocates high-order DG nodes by
+interpolating the shape functions on each straight-sided element
+from its three linear corner positions. Because the linear
+triangulation is straight-sided, there is no ambiguity: high-order
+nodes sit exactly where the element's barycentric interpolation
+places them, i.e., along straight edges and on a regular pattern
+in the interior of each element. The resulting high-order mesh
+inherits the element quality of the linear mesh from
+Section~\ref{sec:tutte-shape}: every $J_K$ of the reference element
+is still the same $2 \times 2$ affine Jacobian, and the Liu--Joe
+distortion $\eta_K$ at each element is the same value it had at the
+end of the shape optimisation.
+
+With this reference mesh in hand, we hand it to
+\texttt{elliptic\_smoothing.m}, the original 2016
+Fortunato--Persson solver, with the \emph{original} input mesh's
+boundary node positions as Dirichlet data. No further modification
+is needed---the smoother runs in exactly the regime it was designed
+for: a well-shaped straight-sided reference with a prescribed
+(possibly curved) physical boundary.
+
+\subsection{Numerical examples}
+\label{sec:tutte-examples}
+
+\subsubsection{Example 1: regular grid, \texttt{w2.m} topology}
+\label{sec:tutte-ex-w2}
+
+We take the tangled input from \texttt{w2.m} (Figure~\ref{fig:w2},
+(\subref{fig:tangled})) and feed it through the pipeline with no
+other information. In particular, the pipeline is \emph{not} told
+that the input came from \texttt{mshsquare}; it sees a high-order
+mesh whose boundary is the unit square on three sides and the curve
+$x = 1 + 0.5 \sin(\pi y)$ on side~4, with heavily tangled interior
+high-order nodes.
+
+Figure~\ref{fig:w2-tutte}(\subref{fig:w2-tutte-input}) is the
+input. Tutte with target~$=[0,1]^2$ produces
+(\subref{fig:w2-tutte-recovered})---the uniform $11 \times 11$
+grid of \texttt{mshsquare(11, 11)}, recovered from topology alone,
+with every element at $\eta_K = 3/2$ (the Liu--Joe distortion of a
+right-isoceles triangle). Running BFGS on
+$F = \sum_K \eta_K^2$ with the equilateral simplex as the ideal
+element does not budge a node: the uniform grid is already a local
+minimum, $|\nabla F| = 4.6 \times 10^{-12}$ at iteration~$0$.
+Feeding (\subref{fig:w2-tutte-recovered}) into
+\texttt{elliptic\_smoothing.m} as the reference mesh, with
+(\subref{fig:w2-tutte-input})'s boundary as Dirichlet data, then
+reproduces the \texttt{w2.m} output of
+Figure~\ref{fig:w2}(\subref{fig:smoothed}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{w2_tutte/mesh_input.png}
+    \caption{Input: tangled mesh from \texttt{w2.m}.}
+    \label{fig:w2-tutte-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{w2_tutte/mesh_tutte.png}
+    \caption{After Tutte with target~$=[0,1]^2$.}
+    \label{fig:w2-tutte-recovered}
+  \end{subfigure}
+  \caption{\texttt{w2\_tutte.m}: the pipeline applied to
+  \texttt{w2.m}'s tangled input. (\subref{fig:w2-tutte-input}) is
+  identical to Figure~\ref{fig:w2}(\subref{fig:tangled}), shown here
+  for reference. (\subref{fig:w2-tutte-recovered}) is the Tutte
+  output.}
+  \label{fig:w2-tutte}
+\end{figure}
+
+\subsubsection{Example 2: unstructured Delaunay on the unit square}
+\label{sec:tutte-ex-unstructured}
+
+Incrementally harder: the same domain as Example~1 but with an
+unstructured topology, so the Tutte Laplacian becomes non-trivial
+and the shape optimiser has real work to do. The input is
+constructed in two steps shown in Figure~\ref{fig:unstr-setup}: a
+clean Delaunay triangulation of the unit square with $40$~boundary
+samples and $60$~interior random points
+(\subref{fig:unstr-clean}), then a mild tangling that perturbs each
+interior linear vertex by a uniform random displacement of amplitude
+$0.1$ and each interior high-order DG node by amplitude $0.03$
+(\subref{fig:unstr-tangled}). Boundary linear and high-order nodes
+are left alone. 
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_clean.png}
+    \caption{Clean random Delaunay.}
+    \label{fig:unstr-clean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_tangled.png}
+    \caption{After mild interior tangling.}
+    \label{fig:unstr-tangled}
+  \end{subfigure}
+  \caption{Construction of the Example~2 input: a clean random
+  Delaunay triangulation of $[0,1]^2$
+  (\subref{fig:unstr-clean}) has its interior linear and high-order
+  nodes mildly perturbed to produce the tangled input of the
+  pipeline (\subref{fig:unstr-tangled}).}
+  \label{fig:unstr-setup}
+\end{figure}
+
+The pipeline proceeds through the four stages of
+Figure~\ref{fig:unstr-pipeline}. Tutte
+(\subref{fig:unstr-pipeline-tutte}) untangles the interior with a
+single sparse solve ($\max \eta = 2.64$, no inversions), placing
+each interior vertex at the centroid of its graph neighbours. Shape
+optimisation (\subref{fig:unstr-pipeline-opt}) redistributes the
+interior vertices with $137$ BFGS iterations, lowering $\max \eta$
+from $2.64$ to $2.30$ and $F$ from $198.2$ to $195.5$; unlike
+Example~1, the optimiser has real work to do on an unstructured
+topology, though the two sliver fans at high-valence vertices
+(visible on the left and right of \subref{fig:unstr-pipeline-opt})
+cannot be removed without retriangulation and remain as the worst
+elements. Handing the optimised reference to
+\texttt{elliptic\_smoothing.m} with the tangled input's boundary as
+Dirichlet data
+(\subref{fig:unstr-pipeline-winslow}) is trivial here---because the
+input's boundary was left unperturbed, it matches the reference
+boundary exactly, and Winslow converges in a single iteration
+reproducing (\subref{fig:unstr-pipeline-opt}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:unstr-pipeline-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_tutte.png}
+    \caption{Tutte.}
+    \label{fig:unstr-pipeline-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_optimized.png}
+    \caption{Shape-opt.}
+    \label{fig:unstr-pipeline-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{unstructured_tutte/mesh_winslow.png}
+    \caption{Winslow.}
+    \label{fig:unstr-pipeline-winslow}
+  \end{subfigure}
+  \caption{Example~2 pipeline. (\subref{fig:unstr-pipeline-input})
+  is the tangled input of Figure~\ref{fig:unstr-setup}(\subref{fig:unstr-tangled}).
+  (\subref{fig:unstr-pipeline-tutte}) is the Tutte output.
+  (\subref{fig:unstr-pipeline-opt}) is the output of shape
+  optimisation on the Tutte output.
+  (\subref{fig:unstr-pipeline-winslow}) is the result of
+  Fortunato--Persson Winslow smoothing with
+  (\subref{fig:unstr-pipeline-opt}) as the reference mesh and
+  (\subref{fig:unstr-pipeline-input})'s boundary as Dirichlet data;
+  since the input boundary was left unperturbed,
+  (\subref{fig:unstr-pipeline-winslow}) is identical to
+  (\subref{fig:unstr-pipeline-opt}).}
+  \label{fig:unstr-pipeline}
+\end{figure}
+
+\subsubsection{Example 3: non-convex L-shape, two target shapes}
+\label{sec:tutte-ex-lshape}
+
+The next incremental step is a non-convex polygonal domain. We take
+the L-shape (unit square minus $[0.5,1] \times [0.5,1]$), which
+introduces a reflex corner at $(0.5,0.5)$ and six boundary corners
+total. The input is constructed in Figure~\ref{fig:l-setup}:
+a clean constrained Delaunay of the L with $30$~boundary samples
+and $41$~interior points (\subref{fig:l-clean}), then a larger
+interior tangle (linear amplitude $0.25$, high-order amplitude
+$0.08$; Figure~\ref{fig:l-setup}(\subref{fig:l-tangled})). 
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_clean.png}
+    \caption{Clean L-shape constrained Delaunay.}
+    \label{fig:l-clean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tangled.png}
+    \caption{After violent interior tangling.}
+    \label{fig:l-tangled}
+  \end{subfigure}
+  \caption{Construction of the Example~3 input: a clean
+  constrained Delaunay triangulation of the L-shape
+  (\subref{fig:l-clean}), with its interior linear and high-order
+  nodes perturbed to produce the tangled input of the pipeline
+  (\subref{fig:l-tangled}).}
+  \label{fig:l-setup}
+\end{figure}
+
+Because the L-shape is non-convex, the Tutte target~$P$ must be a
+convex polygon containing it topologically---some convex region we
+will use as the computational domain before handing off to
+Fortunato--Persson. We run the pipeline with two natural choices
+of~$P$: the unit square and the unit disk.
+
+\paragraph{Unit-square target.}
+Figure~\ref{fig:l-square-pipeline} shows the four stages. Tutte
+with $P = [0,1]^2$ produces a valid straight-sided reference
+(\subref{fig:l-sq-tutte}, $\max \eta = 7.35$) on which shape
+optimisation does real work, pulling $\max \eta$ down to $4.15$
+over $O(10^2)$ BFGS iterations
+(\subref{fig:l-sq-opt}). Feeding this reference to
+\texttt{elliptic\_smoothing.m} with the tangled input's L-shape
+boundary as Dirichlet data
+(\subref{fig:l-sq-winslow}) produces a mesh of the physical
+L-shape, but with $\min I = -0.019$ (one element slightly
+inverted) and $\max \eta = 10.84$. The failure is geometric. The
+L has six corners but the square has four, so Tutte pins only four
+of the L's corners to target corners and the remaining two end up
+as regular boundary vertices on straight edges of the square. When
+Winslow maps the reference back to the L-shape, those two vertices
+must become sharp corners, and the neighbouring element absorbs the
+distortion.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:l-sq-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tutte_square.png}
+    \caption{Tutte (square).}
+    \label{fig:l-sq-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_optimized_square.png}
+    \caption{Shape-opt.}
+    \label{fig:l-sq-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_winslow_square.png}
+    \caption{Winslow.}
+    \label{fig:l-sq-winslow}
+  \end{subfigure}
+  \caption{L-shape pipeline with unit-square target. The square
+  has four corners but the L-shape has six; Tutte pins only four
+  of the L's corners to the target's. The Winslow step
+  (\subref{fig:l-sq-winslow}) produces a valid-looking L-shape
+  mesh but with one slightly inverted element ($\min I = -0.019$)
+  near a boundary vertex that had to become a sharp corner but
+  was sitting on a straight square side in the reference.}
+  \label{fig:l-square-pipeline}
+\end{figure}
+
+\paragraph{Unit-disk target.}
+Figure~\ref{fig:l-circle-pipeline} repeats the pipeline with $P$
+the unit disk. Tutte distributes the L's boundary uniformly around
+the circle (\subref{fig:l-ci-tutte}), shape optimisation settles to
+$\max \eta = 4.38$ over $113$ BFGS iterations
+(\subref{fig:l-ci-opt}), and Winslow produces a clean L-shape mesh
+(\subref{fig:l-ci-winslow}) with $\min I = 0.17$ and $\max \eta =
+4.29$---all elements valid, and $2.5\times$ better in $\max \eta$
+than the square-target output. The disk has no corners, so no
+boundary vertex is artificially assigned corner or non-corner
+status; the L's six corners are free to sit wherever they land on
+$\partial P$ and Winslow reshapes them into sharp L corners without
+fighting the reference.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:l-ci-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tutte_circle.png}
+    \caption{Tutte (circle).}
+    \label{fig:l-ci-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_optimized_circle.png}
+    \caption{Shape-opt.}
+    \label{fig:l-ci-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_winslow_circle.png}
+    \caption{Winslow.}
+    \label{fig:l-ci-winslow}
+  \end{subfigure}
+  \caption{L-shape pipeline with unit-disk target. No artificial
+  corner alignment; the Winslow output
+  (\subref{fig:l-ci-winslow}) is valid ($\min I = 0.17$,
+  $\max \eta = 4.29$) and more than $2.5\times$ better in $\max
+  \eta$ than the square-target output of
+  Figure~\ref{fig:l-square-pipeline}.}
+  \label{fig:l-circle-pipeline}
+\end{figure}
+
+\subsubsection{Example 4: smooth non-convex blob}
+\label{sec:tutte-ex-blob}
+
+The next step is a smoothly curved boundary with no corners at all.
+We take the parametric blob
+\begin{equation*}
+  r(\theta) \;=\; 1 + 0.30\sin(3\theta) + 0.15\cos(5\theta)
+                    + 0.10\sin(7\theta),
+\end{equation*}
+centred and scaled to fit in $[-0.9, 0.9]^2$. The boundary is
+smoothly non-convex: three large lobes with shallow valleys
+between them, no sharp corners anywhere. The physical boundary is
+discretised as a piecewise-linear polygon at the high-order node
+spacing---the first example in which the target curve is being
+\emph{approximated}, not sampled at its corners.
+
+Figure~\ref{fig:blob-setup} constructs the input: a clean
+constrained Delaunay of the blob (\subref{fig:blob-clean}), then a
+violent interior tangle at linear amplitude $0.4$ and high-order
+amplitude $0.12$, leaving the boundary alone
+(\subref{fig:blob-tangled}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_clean.png}
+    \caption{Clean blob constrained Delaunay.}
+    \label{fig:blob-clean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
+    \caption{After violent interior tangling.}
+    \label{fig:blob-tangled}
+  \end{subfigure}
+  \caption{Construction of the Example~4 input.}
+  \label{fig:blob-setup}
+\end{figure}
+
+\paragraph{Unit-square target.}
+Figure~\ref{fig:blob-square-pipeline}: Tutte produces a valid
+reference on the square, shape optimisation smooths it, and
+Winslow maps back to the blob. All elements remain valid. The
+output has visible sliver clustering along the lobes where the
+linear approximation of the smooth boundary is forced into
+alignment with the four artificial corners of the square target.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:blob-sq-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_tutte_square.png}
+    \caption{Tutte (square).}
+    \label{fig:blob-sq-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_optimized_square.png}
+    \caption{Shape-opt.}
+    \label{fig:blob-sq-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_winslow_square.png}
+    \caption{Winslow.}
+    \label{fig:blob-sq-winslow}
+  \end{subfigure}
+  \caption{Blob pipeline with unit-square target. Valid output,
+  but slivers cluster in the lobes where the smooth boundary was
+  forced to align with four corners of the reference.}
+  \label{fig:blob-square-pipeline}
+\end{figure}
+
+\paragraph{Unit-disk target.}
+Figure~\ref{fig:blob-circle-pipeline}: the smooth blob boundary
+maps onto the smooth unit circle with no corner-alignment
+artefacts, and the final Winslow output is cleanly shaped in the
+bulk. However, a new weakness of the method becomes visible here,
+most clearly in the Tutte output (\subref{fig:blob-ci-tutte}):
+\textbf{the boundary vertices are redistributed uniformly around
+$\partial P$, and the barycentric solve pulls interior vertices
+toward the mean of their neighbours, leaving a thin annular layer
+of compressed, boundary-hugging sliver elements immediately inside
+$\partial P$}. This is structural to Tutte: a boundary vertex's
+first interior neighbour sits roughly at the average of the
+boundary-neighbour positions, which is a short chord inwards from
+the boundary, so the element between them is short in the radial
+direction and long tangentially. Shape optimisation
+(\subref{fig:blob-ci-opt}) pulls some interior vertices outward
+and thins the layer, but it cannot eliminate it while boundary
+vertex positions are pinned and the graph neighbourhood is
+fixed---the ring persists as visible boundary-adjacent slivers in
+the final Winslow output (\subref{fig:blob-ci-winslow}). This
+boundary-layer artefact is the price of using a convex target
+with uniform arc-length boundary parameterisation; a
+size-aware boundary parameterisation (matching the input's local
+boundary-edge lengths) would relieve it at the cost of complicating
+the pipeline.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:blob-ci-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_tutte_circle.png}
+    \caption{Tutte (circle).}
+    \label{fig:blob-ci-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_optimized_circle.png}
+    \caption{Shape-opt.}
+    \label{fig:blob-ci-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{blob_tangled/mesh_winslow_circle.png}
+    \caption{Winslow.}
+    \label{fig:blob-ci-winslow}
+  \end{subfigure}
+  \caption{Blob pipeline with unit-disk target. No corner-alignment
+  artefacts, but a thin annular layer of boundary-hugging sliver
+  elements is visible in the Tutte output
+  (\subref{fig:blob-ci-tutte}) and partially reduced but not
+  removed by shape optimisation
+  (\subref{fig:blob-ci-opt}).}
+  \label{fig:blob-circle-pipeline}
+\end{figure}
+
+\subsubsection{Example 5: annulus (multiply connected input)}
+\label{sec:tutte-ex-annulus}
+
+Up to this point every example has been simply connected---a single
+boundary loop, trivially a topological disk. \textbf{Tutte's
+theorem requires this; if the input has a hole, the theorem does
+not apply, and the pipeline needs a preprocessing step to turn the
+input into a disk first.} The simplest such input is an annulus:
+a disk with one hole, so the domain has two boundary loops (outer
+and hole).
+
+The remedy is a classical trick: choose a \emph{cut path} through
+the interior of the mesh from the outer boundary to the hole
+boundary, slit the mesh along it by duplicating the path vertices,
+and assign each triangle on one side of the slit to use the
+originals and each triangle on the other side to use the
+duplicates. The resulting mesh has a single boundary loop that
+traverses the original outer boundary, one side of the cut, the
+original hole boundary, and the other side of the cut. Topologically
+it is a disk, and Tutte applies without further modification.
+
+\paragraph{Implementation (\texttt{cut\_to\_disk.m}).}
+The helper \texttt{cut\_to\_disk(msh)} does three things. First, it
+walks the directed boundary edges of the input and groups them into
+oriented loops (CCW $\to$ outer, CW $\to$ hole by signed area).
+Second, for each hole it computes a shortest edge-path through the
+linear-vertex graph from any outer-loop vertex to any hole-loop
+vertex using breadth-first search; this path is the cut. Third, it
+slits the mesh along the cut by duplicating every vertex on the
+path and rewriting triangles so that triangles on one side of the
+cut use the original indices and triangles on the other side use
+the duplicates.
+
+\paragraph{Side classification: a trap.}
+The non-obvious step is deciding, for each triangle, which side of
+the cut it is on. A tempting first attempt is to do this by a BFS
+on the triangle adjacency graph after marking cut edges as blocked:
+start the BFS from one of the two triangles adjacent to the first
+cut edge, propagate through non-cut edges, and label everything
+reachable as side~1; everything else is side~2. This works on a
+simply connected domain but \textbf{fails on an annulus}, because
+the annulus has a non-trivial loop around the hole and the
+adjacency graph minus the cut edges remains connected---BFS walks
+``the long way around'' and labels the two sides inconsistently.
+The correct approach is purely geometric: for each triangle,
+compute its centroid and take the sign of the cross product of the
+cut direction with the centroid's offset from the nearest cut
+segment. This does not depend on graph connectivity at all and is
+not fooled by the annular wraparound.
+
+\paragraph{Example.}
+Figure~\ref{fig:annulus-pipeline} runs the pipeline on a unit disk
+with an off-centre circular hole of radius $0.3$ centred at
+$(0.2, 0)$. (\subref{fig:annulus-input}) is the raw annular input
+with two boundary loops. (\subref{fig:annulus-slit}) shows the
+mesh after \texttt{cut\_to\_disk}: the cut path from outer to hole
+is overlaid in red, and the resulting mesh has a single boundary
+loop (inner and outer now joined through the slit).
+(\subref{fig:annulus-tutte}) is the Tutte output with the unit
+circle as target---the hole boundary has been unrolled onto an arc
+of $\partial P$ adjacent to the cut vertices, and every triangle
+is valid. (\subref{fig:annulus-opt}) is the shape-opt output.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{annulus_tutte/mesh_annulus.png}
+    \caption{Annular input.}
+    \label{fig:annulus-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{annulus_tutte/mesh_slit.png}
+    \caption{After \texttt{cut\_to\_disk}.}
+    \label{fig:annulus-slit}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{annulus_tutte/mesh_tutte_circle.png}
+    \caption{Tutte (circle).}
+    \label{fig:annulus-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{annulus_tutte/mesh_optimized_circle.png}
+    \caption{Shape-opt.}
+    \label{fig:annulus-opt}
+  \end{subfigure}
+  \caption{Annulus pipeline.
+  (\subref{fig:annulus-input}) has two boundary loops.
+  (\subref{fig:annulus-slit}) has one, after a shortest-path cut
+  (red) from outer to hole. The Tutte output
+  (\subref{fig:annulus-tutte}) places the inner loop along an arc
+  of the target disk adjacent to the slit; the hole is topologically
+  ``unrolled.''}
+  \label{fig:annulus-pipeline}
+\end{figure}
+
+For $k$ holes (e.g., an airfoil-in-a-box with additional internal
+bodies), the same routine runs $k$ times, each iteration cutting
+one hole. The input boundary is re-extracted between iterations so
+the new outer loop (after the previous cut) is the starting point
+for the next cut. Winslow mapping back to the original multiply
+connected physical domain is deferred to future work---it requires
+carrying the cut path along as a ``seam'' in the output, and we
+have not wired that up yet.
+
+\subsubsection{Example 6: comb (first 3-connectedness failure case)}
+\label{sec:tutte-ex-comb}
+
+So far everything has worked. The comb is where the pipeline first
+fails, and the failure introduces a genuinely new phenomenon that
+is not present in any of the previous examples: \textbf{a
+3-connectedness violation of the input mesh's linear-vertex
+graph}. We use this example to isolate the failure mode and to
+describe its remedy; in Example~6 we illustrate the remedy
+cleanly on a cleaner geometry.
+
+The physical domain is a comb with $4$~narrow teeth of width
+$0.12$, gap $0.08$, and height $0.5$, sitting on a base of height
+$0.2$. The input is constructed in Figure~\ref{fig:comb-setup}: a
+clean constrained Delaunay of the comb (\subref{fig:comb-clean}),
+then a violent interior tangle
+(\subref{fig:comb-tangled}).
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_clean.png}
+    \caption{Clean comb constrained Delaunay.}
+    \label{fig:comb-clean}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_tangled.png}
+    \caption{After violent interior tangling.}
+    \label{fig:comb-tangled}
+  \end{subfigure}
+  \caption{Construction of the Example~5 input.}
+  \label{fig:comb-setup}
+\end{figure}
+
+\paragraph{Why the 3-connectedness diagnostic fails.}
+Running \texttt{is\_3\_connected\_diagnostic} on the clean input
+mesh returns a $2$-vertex cut $\{v_1, v_2\}$ whose removal
+disconnects the graph. In our run, $v_1$ and $v_2$ both sit on
+the side walls of the rightmost tooth, at the same height
+roughly halfway up the tooth
+(Figure~\ref{fig:comb-cut}). \textbf{The tooth tip above them
+forms a ``pendant'' subgraph attached to the rest of the mesh
+only through $\{v_1, v_2\}$}, and this is exactly the obstruction
+Tutte's theorem does not tolerate.
+
+The mechanism is simple. The Delaunay sampler places $\sim\!10$
+samples per unit length on the boundary, so each tooth side gets
+a column of $\sim\!5$ boundary vertices. Interior points are
+drawn uniformly over the comb's bounding rectangle, but the
+teeth occupy a small fraction of that area, so \emph{no interior
+points land inside any tooth}. With no interior vertex inside a
+tooth tip, the Delaunay is forced to draw edges directly across
+the tooth from left-wall samples to right-wall samples. Every
+edge that crosses the tooth at the cut height passes through
+$v_1$ or $v_2$, so deleting both severs every cross-tooth edge at
+that height and the tip falls off.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.6\textwidth]{comb_tangled/cut_diagnostic_zoom.png}
+  \caption{Zoom on the rightmost tooth. The pink region is the
+  pendant block (tooth tip). Vertices $v_1, v_2$ (red circles,
+  here labelled~$17$ and~$20$) are the only graph neighbours
+  through which pendant vertices connect to the rest of the
+  mesh. Removing them isolates the pink region: a $2$-vertex cut,
+  i.e., graph connectivity $\le 2 < 3$.}
+  \label{fig:comb-cut}
+\end{figure}
+
+\paragraph{Consequences for the pipeline.}
+Tutte's theorem guarantees a non-inverted straight-line embedding
+\emph{only} when the linear-vertex graph is $3$-connected. Our
+graph is $2$-connected, so the guarantee is voided, and the
+generic failure mode for a pendant block $B$ attached by
+$\{v_1, v_2\}$ is that the barycentric solve forces interior
+vertices of $B$ onto the line segment $\overline{v_1 v_2}$,
+collapsing or inverting the pendant triangles. This is what
+Figure~\ref{fig:comb-square-pipeline} shows for the unit-square
+target: Tutte collapses the pendant tooth-tips onto the short
+chords between each tooth's cut vertices, the pipeline inherits
+$\max\eta \approx 10^{15}$ from the collapse, shape optimisation
+cannot escape, and Winslow produces a nonsense output.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:comb-sq-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_tutte_square.png}
+    \caption{Tutte (square).}
+    \label{fig:comb-sq-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_optimized_square.png}
+    \caption{Shape-opt.}
+    \label{fig:comb-sq-opt}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.24\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_winslow_square.png}
+    \caption{Winslow.}
+    \label{fig:comb-sq-winslow}
+  \end{subfigure}
+  \caption{Comb pipeline with unit-square target. Tutte collapses
+  the pendant tooth-tip subgraphs onto the line between their
+  cut vertices, producing degenerate and inverted elements that
+  subsequent stages cannot rescue.}
+  \label{fig:comb-square-pipeline}
+\end{figure}
+
+Figure~\ref{fig:comb-circle-pipeline} shows the unit-disk target.
+Tutte \emph{empirically} avoids inversion---the rounder boundary
+layout gives the pendant tip enough room to unfold without
+folding---but the resulting reference is badly shaped, and
+\texttt{elliptic\_smoothing.m} does not converge when asked to
+map it to the physical comb.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_tangled.png}
+    \caption{Tangled input.}
+    \label{fig:comb-ci-input}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_tutte_circle.png}
+    \caption{Tutte (circle).}
+    \label{fig:comb-ci-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.32\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{comb_tangled/mesh_optimized_circle.png}
+    \caption{Shape-opt.}
+    \label{fig:comb-ci-opt}
+  \end{subfigure}
+  \caption{Comb pipeline with unit-disk target. Tutte produces a
+  valid but poorly-shaped reference (the pendant tooth-tips
+  do not collapse, but the straight chord $\overline{v_1 v_2}$
+  ends up very short on the disk). Winslow on this reference
+  does not converge and is not shown.}
+  \label{fig:comb-circle-pipeline}
+\end{figure}
+
+\paragraph{Remedy: restore $3$-connectedness by interior
+anchoring.} The failure is a shortcoming of the \emph{input
+meshing}, not of the domain: the comb is a perfectly ordinary
+simply connected polygon, and any triangulation that resolves
+each narrow tooth with at least one interior vertex is
+$3$-connected. \textbf{The robust fix is to run the
+$3$-connectedness diagnostic up front and, wherever it reports
+a $2$-cut $\{v_1, v_2\}$, insert an interior anchor vertex inside
+the pendant block that the cut isolates.} The new vertex becomes
+a third independent path between the pendant block and the rest
+of the graph, breaking the $2$-cut. Concretely: place the anchor
+at a safe interior position near the midpoint of
+$\overline{v_1 v_2}$, verify it lies inside the domain polygon,
+add it to the point set, and re-triangulate with constrained
+Delaunay. If the diagnostic still reports a cut, iterate. The
+loop is cheap (each iteration is one Delaunay retriangulation)
+and in all examples we have tested terminates in a small number
+of steps.
+
+The remedy is straightforward enough that we defer its numerical
+illustration to Example~7 (Section~\ref{sec:tutte-ex-bump}),
+where the same class of $3$-connectedness failure occurs in a
+cleaner setting (corner-pendant rather than narrow-feature
+pendant) and the anchoring fix produces a fully valid pipeline
+on a recognised high-order CFD benchmark. The comb is included
+here as the motivating example of what goes wrong when the fix
+is omitted.
+
 
 \bibliographystyle{plain}
 \bibliography{refs}

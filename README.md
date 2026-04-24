@@ -111,6 +111,107 @@ assembly sees the modification.
   solver. The main test: does the `W`-modification cancel the
   sliver distortion the unmodified solver inherits from the
   reference?
-- `w_regression.m` — bit-for-bit regression. Verifies that
-  `W_h = I` produces the exact same output as `elliptic_smoothing`.
-  Run after any change to the W machinery.
+- `w_regression.m` — sanity check. Runs the W-modified solver in
+  its "off" state (either with `msh.W_h` not set, or set to the
+  identity at every node) on the `w2.m` problem, and verifies the
+  output is identical to the unmodified `elliptic_smoothing` output
+  to machine precision. Guards against accidentally changing the
+  smoother's behaviour when the W-modification is supposed to be
+  inactive; re-run after any edit to `elliptic_smoothing_W.m`.
+
+## `demos/tutte/` — Tutte + shape-optimisation initial-embedding pipeline
+
+The Fortunato–Persson algorithm (modified or not) needs a **valid
+straight-sided mesh** as its starting point: the Picard iteration is
+computed from the current configuration, so it cannot be launched
+from a tangled or ill-defined initial guess. In the `w_` experiments
+above, that clean starting point is the reference mesh. These
+experiments test an independent route: given only the boundary of the
+target domain and a Delaunay-generated linear-vertex topology,
+construct a valid straight-sided mesh by composing Tutte's (1963)
+barycentric embedding with a global shape optimisation, and then (in
+principle) hand that mesh off to `elliptic_smoothing` as the
+starting point. The output of this pipeline is a candidate for the
+role the reference mesh plays in the original formulation.
+
+**Auxiliary functions** (at the project root):
+
+- `tutte_embedding.m` — straight-line Tutte embedding. Extracts the
+  mesh boundary as a CCW loop, pins each boundary vertex to a point on
+  a target convex polygon (unit square by default; `'TargetShape',
+  'circle'` for a circle; arbitrary polygon via `'TargetCorners'`), and
+  solves the graph-Laplacian system `L p = 0` for the interior vertex
+  positions. Tutte's theorem: provided the linear-vertex graph is
+  3-connected and planar and the boundary polygon is convex, the
+  resulting straight-line drawing has no inverted or degenerate
+  faces. Acts on `msh.p` only; caller re-runs `nodealloc` to propagate
+  to high-order nodes.
+- `optimize_shape.m` — global shape optimisation of the straight-sided
+  linear mesh. Minimises `Σ_K η_K^2` — the Liu–Joe inverse mean-ratio
+  distortion against an equilateral-triangle ideal — with boundary
+  linear vertices pinned. Hand-coded BFGS with Armijo backtracking and
+  an analytic gradient. Used after `tutte_embedding` to relax the
+  uniform-boundary Tutte layout into well-shaped elements before any
+  Winslow run.
+- `cut_to_disk.m` — preprocessing for multiply-connected domains. For
+  each hole, finds the shortest graph path from the outer boundary to
+  the hole boundary and slits the mesh along it, duplicating each
+  vertex on the path so that triangles on opposite sides of the slit
+  reference different copies. The A/B side partition is done by a
+  geometric nearest-segment sign test rather than by BFS on the
+  triangle dual graph, because on an annulus the dual graph minus the
+  cut edges remains connected (one can walk around the hole on the
+  opposite side of the slit) and BFS floods everything with one label.
+  After slitting, the mesh is a topological disk and Tutte handles it
+  unchanged.
+
+**Drivers** (live in `demos/tutte/` and save figures to
+`demos/tutte/figures/<script>/`). Each tangled driver runs the pipeline
+against both `'square'` and `'circle'` targets and saves the clean,
+tangled, post-Tutte and post-shape-opt meshes:
+
+- `unstructured_tutte.m` — smallest sanity check. Random
+  unstructured Delaunay triangulation of the unit square, mildly
+  tangled, target square. Confirms the basic Tutte + shape-opt
+  pipeline on a convex domain with varying vertex valences.
+- `w2_tutte.m` — starts from the violently-tangled physical mesh of
+  `w2.m` (structured square with the `0.5 sin(π y)` side-4 indent),
+  discards the geometry, and recovers a valid mesh from the linear
+  topology alone. Connects this pipeline to the canonical
+  Fortunato–Persson test case.
+- `l_shape_tangled.m` — non-convex polygonal domain (unit square minus
+  the upper-right quadrant). Interior nodes are perturbed hard enough
+  that they can leave the physical domain entirely.
+- `blob_tangled.m` — non-convex smooth boundary,
+  `r(θ) = 1 + 0.3 sin 3θ + 0.15 cos 5θ + 0.1 sin 7θ`, violently
+  tangled. Tests the pipeline on a star-shaped-ish domain whose
+  boundary has significant curvature variation.
+- `bump_tangled.m` — Gaussian bump in a channel (the High-Order CFD
+  Workshop geometry): `y ∈ [0.0625 e^(-25 x²), 0.8]`,
+  `x ∈ [-1.5, 1.5]`, curved bottom wall and three straight walls.
+  Simply connected, so no `cut_to_disk` is needed; the main interest
+  is the curved lower boundary.
+- `comb_tangled.m` — comb-shaped polygonal domain (rectangular back
+  with four rectangular teeth protruding upward), tangled. The
+  interesting test: narrow teeth create high-aspect-ratio elements
+  and near-pinch-point topology that stresses Tutte's
+  3-connectedness assumption.
+- `comb_preview.m` — non-pipeline helper. Draws the proposed comb
+  geometry and a clean straight-sided Delaunay mesh on it so the
+  shape can be inspected before any tangling is applied.
+- `comb_cut_diagnostic.m` — diagnostic. Rebuilds the clean comb mesh
+  deterministically and highlights a specific pair of vertices whose
+  removal disconnects the linear-vertex graph, breaking Tutte's
+  3-connectedness precondition.
+- `comb_all_cuts.m` — companion to the diagnostic: enumerates **every**
+  2-vertex cut in the clean comb mesh and reports the component sizes
+  after each removal, so "pendant-ear" cuts can be distinguished from
+  genuine topological obstructions.
+- `annulus_tutte.m` — multiply-connected test. Unit disk with an
+  off-centre hole, built from a constrained Delaunay with the inner
+  boundary oriented CW. Runs `cut_to_disk` → Tutte (circle target) →
+  shape-opt → `elliptic_smoothing`. This is the one driver that
+  exercises the full intended sequence (initial embedding handed to
+  the Winslow smoother); the cut-to-disk and Tutte stages complete,
+  the final `elliptic_smoothing` hand-off is the step currently under
+  investigation.

@@ -6,11 +6,27 @@
 \contentsline {paragraph}{Heuristic nature of the extension.}{5}{section*.6}%
 \contentsline {subsection}{\numberline {1.3}Continuity of $W$ and the $\tilde \alpha $ projection}{5}{subsection.1.3}%
 \contentsline {subsection}{\numberline {1.4}Numerical Results/Tests}{6}{subsection.1.4}%
-\contentsline {subsection}{\numberline {1.5}Numerical experiments with the $W$-modification (negative result)}{6}{subsection.1.5}%
-\contentsline {paragraph}{Piecewise-constant $W_K$.}{7}{section*.8}%
-\contentsline {paragraph}{Nodal projection onto $P^1$ (linear corners only).}{7}{section*.9}%
-\contentsline {paragraph}{Nodal projection onto $V_h^p$ (all CG nodes).}{8}{section*.10}%
-\contentsline {paragraph}{Weighting schemes in the lumped projection.}{8}{section*.11}%
-\contentsline {paragraph}{Sliver-only $W$.}{8}{section*.12}%
-\contentsline {paragraph}{Summary.}{8}{section*.13}%
-\contentsline {paragraph}{Interpretation.}{9}{section*.15}%
+\contentsline {paragraph}{Running the same modification on the skewed reference (\texttt {w2\_skewed\_W.m}).}{6}{section*.8}%
+\contentsline {subsection}{\numberline {1.5}Summary}{8}{subsection.1.5}%
+\contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{8}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Extracting the topology}{9}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{9}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Shape optimisation of the straight-sided mesh}{10}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{11}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Numerical examples}{11}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt {w2.m} topology}{11}{subsubsection.2.5.1}%
+\contentsline {subsubsection}{\numberline {2.5.2}Example 2: unstructured Delaunay on the unit square}{12}{subsubsection.2.5.2}%
+\contentsline {subsubsection}{\numberline {2.5.3}Example 3: non-convex L-shape, two target shapes}{12}{subsubsection.2.5.3}%
+\contentsline {paragraph}{Unit-square target.}{14}{section*.13}%
+\contentsline {paragraph}{Unit-disk target.}{14}{section*.15}%
+\contentsline {subsubsection}{\numberline {2.5.4}Example 4: smooth non-convex blob}{16}{subsubsection.2.5.4}%
+\contentsline {paragraph}{Unit-square target.}{16}{section*.18}%
+\contentsline {paragraph}{Unit-disk target.}{16}{section*.20}%
+\contentsline {subsubsection}{\numberline {2.5.5}Example 5: annulus (multiply connected input)}{17}{subsubsection.2.5.5}%
+\contentsline {paragraph}{Implementation (\texttt {cut\_to\_disk.m}).}{18}{section*.22}%
+\contentsline {paragraph}{Side classification: a trap.}{18}{section*.23}%
+\contentsline {paragraph}{Example.}{18}{section*.24}%
+\contentsline {subsubsection}{\numberline {2.5.6}Example 6: comb (first 3-connectedness failure case)}{19}{subsubsection.2.5.6}%
+\contentsline {paragraph}{Why the 3-connectedness diagnostic fails.}{19}{section*.27}%
+\contentsline {paragraph}{Consequences for the pipeline.}{19}{section*.29}%
+\contentsline {paragraph}{Remedy: restore $3$-connectedness by interior anchoring.}{20}{section*.32}%
