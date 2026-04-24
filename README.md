@@ -153,17 +153,6 @@ role the reference mesh plays in the original formulation.
   an analytic gradient. Used after `tutte_embedding` to relax the
   uniform-boundary Tutte layout into well-shaped elements before any
   Winslow run.
-- `cut_to_disk.m` — preprocessing for multiply-connected domains. For
-  each hole, finds the shortest graph path from the outer boundary to
-  the hole boundary and slits the mesh along it, duplicating each
-  vertex on the path so that triangles on opposite sides of the slit
-  reference different copies. The A/B side partition is done by a
-  geometric nearest-segment sign test rather than by BFS on the
-  triangle dual graph, because on an annulus the dual graph minus the
-  cut edges remains connected (one can walk around the hole on the
-  opposite side of the slit) and BFS floods everything with one label.
-  After slitting, the mesh is a topological disk and Tutte handles it
-  unchanged.
 
 **Drivers** (live in `demos/tutte/` and save figures to
 `demos/tutte/figures/<script>/`). Each tangled driver runs the pipeline
@@ -189,29 +178,4 @@ tangled, post-Tutte and post-shape-opt meshes:
 - `bump_tangled.m` — Gaussian bump in a channel (the High-Order CFD
   Workshop geometry): `y ∈ [0.0625 e^(-25 x²), 0.8]`,
   `x ∈ [-1.5, 1.5]`, curved bottom wall and three straight walls.
-  Simply connected, so no `cut_to_disk` is needed; the main interest
-  is the curved lower boundary.
-- `comb_tangled.m` — comb-shaped polygonal domain (rectangular back
-  with four rectangular teeth protruding upward), tangled. The
-  interesting test: narrow teeth create high-aspect-ratio elements
-  and near-pinch-point topology that stresses Tutte's
-  3-connectedness assumption.
-- `comb_preview.m` — non-pipeline helper. Draws the proposed comb
-  geometry and a clean straight-sided Delaunay mesh on it so the
-  shape can be inspected before any tangling is applied.
-- `comb_cut_diagnostic.m` — diagnostic. Rebuilds the clean comb mesh
-  deterministically and highlights a specific pair of vertices whose
-  removal disconnects the linear-vertex graph, breaking Tutte's
-  3-connectedness precondition.
-- `comb_all_cuts.m` — companion to the diagnostic: enumerates **every**
-  2-vertex cut in the clean comb mesh and reports the component sizes
-  after each removal, so "pendant-ear" cuts can be distinguished from
-  genuine topological obstructions.
-- `annulus_tutte.m` — multiply-connected test. Unit disk with an
-  off-centre hole, built from a constrained Delaunay with the inner
-  boundary oriented CW. Runs `cut_to_disk` → Tutte (circle target) →
-  shape-opt → `elliptic_smoothing`. This is the one driver that
-  exercises the full intended sequence (initial embedding handed to
-  the Winslow smoother); the cut-to-disk and Tutte stages complete,
-  the final `elliptic_smoothing` hand-off is the step currently under
-  investigation.
+  Simply connected; the main interest is the curved lower boundary.
