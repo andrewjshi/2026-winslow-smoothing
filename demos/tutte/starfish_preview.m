@@ -59,7 +59,9 @@ msh_t = tutte_embedding(msh, 'TargetShape', 'circle');
 msh_t = nodealloc(msh_t, porder);
 
 % --- Shape optimisation (pinned boundary) ---
+t0 = tic;
 [msh_o, info] = optimize_shape(msh_t);
+t_shape_opt = toc(t0);
 msh_o = nodealloc(msh_o, porder);
 
 % --- Select the bottom-left arm of the PHYSICAL starfish. This arm
@@ -112,7 +114,9 @@ fprintf('  red arm (physical bottom-left): %d triangles\n', numel(red_tris));
 curvep1 = msh_o.p1;
 is_bnd_dg = boundary_dg_mask_local(msh_o);
 curvep1(is_bnd_dg) = msh.p1(is_bnd_dg);
+t0 = tic;
 msh_w = elliptic_smoothing(msh_o, curvep1, false);
+t_winslow_so = toc(t0);
 
 
 % --- Ablation: Winslow from raw Tutte output (no shape-opt). Is the
@@ -122,7 +126,9 @@ curvep1_t = msh_t.p1;
 is_bnd_dg_t = boundary_dg_mask_local(msh_t);
 curvep1_t(is_bnd_dg_t) = msh.p1(is_bnd_dg_t);
 try
+    t0 = tic;
     msh_wt = elliptic_smoothing(msh_t, curvep1_t, false);
+    t_winslow_raw = toc(t0);
     fprintf('  Winslow-from-Tutte: converged.\n');
 catch err
     fprintf('  Winslow-from-Tutte FAILED: %s\n', err.message);
@@ -150,6 +156,15 @@ if exist('msh_w', 'var')
 end
 if exist('msh_wt', 'var')
     report_quality('pipeline (raw Tutte)    ', msh_wt);
+end
+
+fprintf('\nTiming summary:\n');
+fprintf('  shape-opt           : %.2fs\n', t_shape_opt);
+fprintf('  Winslow (shape-opt) : %.2fs\n', t_winslow_so);
+if exist('t_winslow_raw', 'var')
+    fprintf('  Winslow (raw Tutte) : %.2fs\n', t_winslow_raw);
+    fprintf('  shape-opt + Winslow vs Winslow alone: %.2fs vs %.2fs\n', ...
+        t_shape_opt + t_winslow_so, t_winslow_raw);
 end
 
 fprintf('\nSaved figures to %s/\n', figdir);

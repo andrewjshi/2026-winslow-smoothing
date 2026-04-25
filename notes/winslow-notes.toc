@@ -11,18 +11,19 @@
 \contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{8}{section.2}%
 \contentsline {subsection}{\numberline {2.1}Extracting the topology}{9}{subsection.2.1}%
 \contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{9}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Shape optimisation of the straight-sided mesh}{10}{subsection.2.3}%
-\contentsline {paragraph}{Extension: sliding the target boundary.}{11}{section*.9}%
+\contentsline {subsection}{\numberline {2.3}Shape optimization of the straight-sided mesh}{10}{subsection.2.3}%
 \contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{11}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}Numerical examples}{12}{subsection.2.5}%
-\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt {w2.m} topology}{12}{subsubsection.2.5.1}%
+\contentsline {subsection}{\numberline {2.5}Numerical examples}{11}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt {w2.m} topology}{11}{subsubsection.2.5.1}%
 \contentsline {subsubsection}{\numberline {2.5.2}Example 2: unstructured Delaunay on the unit square}{12}{subsubsection.2.5.2}%
-\contentsline {subsubsection}{\numberline {2.5.3}Example 3: smooth non-convex starfish}{14}{subsubsection.2.5.3}%
-\contentsline {paragraph}{What is going wrong.}{14}{section*.14}%
-\contentsline {paragraph}{Why shape optimisation cannot fix this.}{14}{section*.15}%
-\contentsline {paragraph}{The general principle.}{14}{section*.16}%
-\contentsline {paragraph}{Aside: what shape optimisation actually optimises.}{14}{section*.17}%
-\contentsline {subsubsection}{\numberline {2.5.4}Example 4: non-convex L-shape, two target shapes}{16}{subsubsection.2.5.4}%
-\contentsline {paragraph}{Unit-square target.}{16}{section*.19}%
-\contentsline {paragraph}{Unit-disk target.}{17}{section*.21}%
-\contentsline {subsection}{\numberline {2.6}How to Present to Persson}{18}{subsection.2.6}%
+\contentsline {subsubsection}{\numberline {2.5.3}Example 3: convex stadium}{14}{subsubsection.2.5.3}%
+\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{14}{section*.13}%
+\contentsline {subsubsection}{\numberline {2.5.4}Example 4: smooth non-convex starfish}{14}{subsubsection.2.5.4}%
+\contentsline {paragraph}{Clumping on the Tutte disk as a diagnostic.}{17}{section*.16}%
+\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{17}{section*.17}%
+\contentsline {paragraph}{Aside: what shape optimization actually optimizes.}{17}{section*.19}%
+\contentsline {subsubsection}{\numberline {2.5.5}Example 5: non-convex L-shape, two target shapes}{18}{subsubsection.2.5.5}%
+\contentsline {paragraph}{Unit-square target.}{18}{section*.20}%
+\contentsline {paragraph}{Unit-disk target.}{18}{section*.22}%
+\contentsline {paragraph}{Aside: what happens if we let boundary nodes slide?}{20}{section*.24}%
+\contentsline {subsection}{\numberline {2.6}How to Present to Persson}{20}{subsection.2.6}%

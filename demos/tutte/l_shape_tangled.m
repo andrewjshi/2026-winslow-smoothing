@@ -80,8 +80,19 @@ msh_clean = nodealloc(msh_clean, porder);
 figdir = 'figures/l_shape_tangled';
 if ~exist(figdir, 'dir'), mkdir(figdir); end
 
+% --- 6 L-shape domain corners (as linear-vertex indices); used to
+% track the corners through Tutte and shape-opt in figure panels.
+lshape_corners = [0 0; 1 0; 1 0.5; 0.5 0.5; 0.5 1; 0 1];
+n_lc = size(lshape_corners, 1);
+lshape_corner_idx = zeros(n_lc, 1);
+for k = 1:n_lc
+    [~, lshape_corner_idx(k)] = min(vecnorm( ...
+        msh_clean.p' - lshape_corners(k,:), 2, 2));
+end
+
 fprintf('clean L-shape mesh:\n'); print_quality(msh_clean);
-plot_mesh(msh_clean, fullfile(figdir, 'mesh_clean.png'));
+plot_mesh_verts(msh_clean, lshape_corner_idx, ...
+    fullfile(figdir, 'mesh_clean.png'));
 
 % --- 3-connectedness diagnostic: find any pair whose removal disconnects
 [ok, pair] = is_3_connected_diagnostic(msh_clean);
@@ -129,19 +140,6 @@ summary = struct('target', {}, 'mode', {}, 'stage', {}, ...
 
 square_corners = [0 1 1 0; 0 0 1 1];
 
-% Identify the 6 L-shape domain corners in the linear-vertex list of
-% msh_tangled. These are the anchor points for circle sliding: they are
-% pinned on the circle at proportional-arc positions (set up by
-% tutte_embedding), and their physical positions stay at the L-shape
-% corners.
-lshape_corners = [0 0; 1 0; 1 0.5; 0.5 0.5; 0.5 1; 0 1];
-n_lc = size(lshape_corners, 1);
-lshape_corner_idx = zeros(n_lc, 1);
-for k = 1:n_lc
-    [~, lshape_corner_idx(k)] = min(vecnorm( ...
-        msh_tangled.p' - lshape_corners(k,:), 2, 2));
-end
-
 for target_shape = {'square', 'circle'}
     ts = target_shape{1};
     fprintf('\n=== target: %s ===\n', ts);
@@ -149,7 +147,8 @@ for target_shape = {'square', 'circle'}
     msh_t = tutte_embedding(msh_tangled, 'TargetShape', ts);
     msh_t = nodealloc(msh_t, porder);
     fprintf('after Tutte:\n'); print_quality(msh_t);
-    plot_mesh(msh_t, fullfile(figdir, sprintf('mesh_tutte_%s.png', ts)));
+    plot_mesh_verts(msh_t, lshape_corner_idx, ...
+        fullfile(figdir, sprintf('mesh_tutte_%s.png', ts)));
 
     for mode_cell = {'pinned', 'slide'}
         mode = mode_cell{1};
@@ -173,10 +172,10 @@ for target_shape = {'square', 'circle'}
         fprintf('  F_init = %.4e, F_final = %.4e, iters = %d\n', ...
                 info.F_initial, info.F_final, info.iterations);
         if strcmp(mode, 'pinned')
-            plot_mesh(msh_r, fullfile(figdir, ...
+            plot_mesh_verts(msh_r, lshape_corner_idx, fullfile(figdir, ...
                 sprintf('mesh_optimized_%s.png', ts)));
         else
-            plot_mesh(msh_r, fullfile(figdir, ...
+            plot_mesh_verts(msh_r, lshape_corner_idx, fullfile(figdir, ...
                 sprintf('mesh_optimized_%s_slide.png', ts)));
         end
         summary(end+1) = pack_row(ts, mode, 'shape-opt', msh_r);
@@ -202,11 +201,16 @@ for target_shape = {'square', 'circle'}
         try
             msh_w = elliptic_smoothing(msh_r, curvep1, false);
             fprintf('after Winslow (%s):\n', mode); print_quality(msh_w);
+            [~, I_w] = quality(msh_w);
+            inv_tris = find(I_w <= 0);
+            if ~isempty(inv_tris)
+                fprintf('  inverted element indices: %s\n', mat2str(inv_tris(:)'));
+            end
             if strcmp(mode, 'pinned')
-                plot_mesh(msh_w, fullfile(figdir, ...
+                plot_mesh_hl(msh_w, inv_tris, fullfile(figdir, ...
                     sprintf('mesh_winslow_%s.png', ts)));
             else
-                plot_mesh(msh_w, fullfile(figdir, ...
+                plot_mesh_hl(msh_w, inv_tris, fullfile(figdir, ...
                     sprintf('mesh_winslow_%s_slide.png', ts)));
             end
             summary(end+1) = pack_row(ts, mode, 'winslow', msh_w);
@@ -380,6 +384,34 @@ function plot_mesh(msh, filename)
 figure; clf;
 dgmeshplot_curved(msh, 4, 1, 0);
 set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
+set(gcf, 'Position', [114 1 560 560]);
+exportgraphics(gcf, filename, 'Resolution', 200);
+end
+
+
+function plot_mesh_hl(msh, red_tris, filename)
+figure; clf;
+hh = dgmeshplot_curved(msh, 4, 1, 0);
+if ~isempty(red_tris)
+    set(hh(red_tris), 'FaceColor', [1 0.4 0.4]);
+end
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
+set(gcf, 'Position', [114 1 560 560]);
+exportgraphics(gcf, filename, 'Resolution', 200);
+end
+
+
+function plot_mesh_verts(msh, red_verts, filename)
+figure; clf;
+dgmeshplot_curved(msh, 4, 1, 0);
+set(findobj(gca, 'Type', 'line'), 'MarkerSize', 3);
+if ~isempty(red_verts)
+    hold on;
+    plot(msh.p(1, red_verts), msh.p(2, red_verts), 'o', ...
+        'MarkerFaceColor', [1 0 0], 'MarkerEdgeColor', [1 0 0], ...
+        'MarkerSize', 10);
+    hold off;
+end
 set(gcf, 'Position', [114 1 560 560]);
 exportgraphics(gcf, filename, 'Resolution', 200);
 end
