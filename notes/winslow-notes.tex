@@ -198,8 +198,7 @@ introduce \texttt{w2\_skewed.m}, a slight variation of \texttt{w2.m}
 in which a single interior linear vertex of the otherwise uniform
 $11 \times 11$ reference is moved toward a neighbor, creating a
 small patch of sliver elements in the upper-right of the reference.
-Everything else---the boundary perturbation on side~4, the polynomial
-order, the smoother itself---is identical to \texttt{w2.m}. The
+Everything else is identical to \texttt{w2.m}. The
 scaled Jacobian $I$ of~\eqref{eq:scaledJ} is blind to this regime:
 any simplex with straight edges has $I = 1$ regardless of aspect
 ratio, so it cannot ``see'' the sliver patch in the reference. To
@@ -341,6 +340,20 @@ The covariant and contravariant metrics of the total map are
 \end{equation}
 With $W_K = I$ for all $K$, $\tilde g^{ij} = g^{ij}$ and the 2016
 formulation is recovered.
+
+To summarize the three Jacobians introduced above and what they map
+between:
+\begin{itemize}
+  \item $J = \partial x/\partial \xi$: reference $\to$ physical. The
+    Winslow Jacobian of Section~0.
+  \item $W_K$: reference $\to$ ideal. Per-element matrix recording how
+    skewed the reference element is relative to the ideal target shape;
+    $W_K = I$ means the reference element is already ideal.
+  \item $J_{\mathrm{tot}} = J\, W_K^{-1}$: ideal $\to$ physical. Composite
+    Jacobian of the chain ideal $\to$ reference $\to$ physical, whose
+    departure from the identity measures how far the physical element
+    deviates from the ideal target shape.
+\end{itemize}
 
 \subsection{Modified split form}
 
@@ -524,7 +537,7 @@ steps, then amplify to residuals of $20$--$90$, and finally hit
 the $100$-iteration cap with no sign of settling. The unmodified
 solver, by contrast, converges cleanly on the same setup in
 $14$ iterations (Figure~\ref{fig:w2_skewed}). The divergence is
-not an implementation artefact; \texttt{w\_regression.m} continues
+not an implementation artifact; \texttt{w\_regression.m} continues
 to pass.
 
 This is the failure mode anticipated qualitatively in
@@ -542,33 +555,64 @@ With $\tilde g^{ij} = W_h^{ik} g^{kl} W_h^{jl}$,
   \label{eq:tildealpha-split}
 \end{equation}
 The first term is the original $\alpha$ conjugated by $W_h$.
-Like the unmodified $\alpha$, it is driven by jumps in
-$\partial x / \partial \xi$, which shrink as $x_h$ relaxes toward
-its fixed point---the iteration's self-limiting smoothing. The
-second term is \emph{entirely new} and is independent of the
-current iterate: $W_h$ is fixed once by the reference geometry,
-so $\partial_i W_h$ never decays with Picard. When the reference
-mesh is uniform, $W_h$ is a constant field, $\partial_i W_h = 0$,
-and this new term vanishes---which is why \texttt{w2\_W.m}
-converges and only exhibits a mild fixed-point inconsistency (the
-two inverted interior elements) rather than an iteration-level
-failure. When the reference contains a sliver patch, $W_h$ varies
-sharply across a handful of elements and $\partial_i W_h$ is
-locally large; the new term contributes a persistent,
-iteration-independent forcing to $\tilde\alpha$ that neither the
-$V_h^p$ projection nor the Picard loop can absorb.
+Like the unmodified $\alpha$, it is driven by the
+\emph{inter-element jumps} of $\partial x / \partial \xi$ ---
+not its magnitude, which does not shrink, but the discontinuities
+of the per-element gradient across element interfaces. (These
+exist because $x_h \in V_h^p$ is $C^0$ but not $C^1$, so
+$\partial x_h / \partial \xi$ is single-valued inside each
+element but jumps across the boundary between adjacent elements.)
+These jumps shrink as $x_h$ relaxes toward its fixed
+point, decaying toward a small discretization-error floor
+controlled by $p$ and $h$ (the converged $x_h$ is the best
+polynomial approximation in $V_h^p$ of a genuinely smooth
+harmonic map, so the residual gradient mismatch at interfaces
+reflects only the polynomial truncation error, not roughness in
+the iterate itself). They do not reach zero at finite $p$.
 
-Functionally, $\tilde\alpha_j$ is the advection coefficient in the
-$x$-equation
-$\partial_i(\tilde g^{ij}\partial_j x_k)
- + \tilde\alpha_j\,\partial_j x_k = 0$.
-Large, persistent $\tilde\alpha$ pushes the operator into the
-advection-dominated regime that standard continuous Galerkin
-treats badly without stabilization (SUPG, upwinding, etc.), and in
-the Picard loop manifests as an increasingly-noisy update that
-eventually exceeds the iteration's natural contraction rate. The
-failure in \texttt{w2\_skewed\_W.m} is therefore not a quirk of
-our particular discretization choice but a consequence of the
+The second term is \emph{entirely new} and is
+independent of the current iterate: $W_h$ is fixed once by the
+reference geometry, so $\partial_i W_h$ never decays with
+Picard. When the reference mesh is uniform, $W_h$ is a constant
+field, $\partial_i W_h = 0$, and this new term vanishes---which
+is why \texttt{w2\_W.m} converges and only exhibits a mild
+fixed-point inconsistency (the two inverted interior elements)
+rather than an iteration-level failure. When the reference
+contains a sliver patch, $W_h$ varies sharply across a handful
+of elements and $\partial_i W_h$ is locally large; the new term
+contributes a persistent, iteration-independent forcing to
+$\tilde\alpha$ that neither the $V_h^p$ projection nor the
+Picard loop can absorb. Two failures result:
+
+\begin{itemize}
+  \item \emph{The operator is pushed into a bad regime.}
+    $\tilde\alpha_j$ is the advection coefficient in the
+    $x$-equation $\partial_i(\tilde g^{ij}\partial_j x_k)
+     + \tilde\alpha_j\,\partial_j x_k = 0$. A persistent large
+    $\tilde\alpha$ makes the operator effectively
+    advection-dominated, which standard continuous Galerkin
+    handles badly without stabilization (SUPG, upwinding, etc.).
+  \item \emph{The Picard loop loses its contraction.} Picard
+    converges when the per-step projection error sits below the
+    iteration's natural contraction rate. The relevant quantity
+    is not the magnitude of $\alpha$ (which does not go to zero
+    even in the original method --- the converged $\alpha$ is
+    typically a smooth nonzero field), but its
+    \emph{spatial roughness at the mesh scale}: the inter-element
+    discontinuities of $\alpha$ that the $L^2$ projection has to
+    absorb. In the original formulation this roughness is
+    controlled by the inter-element jumps of $\partial_i g^{ij}$,
+    which decay alongside the iterate to a small
+    discretization-error floor. With the new term, the
+    discontinuities of $\partial_i W_h \cdot g \cdot W_h$ are
+    pinned at the value set by the reference geometry and never
+    decay. The projection still runs, but the per-step roughness
+    it has to absorb is constant; once that constant exceeds the
+    contraction-rate budget the iteration diverges.
+\end{itemize}
+
+The failure in \texttt{w2\_skewed\_W.m} is therefore not a quirk
+of our particular discretization choice but a consequence of the
 $W$-modification itself once $\partial W_h \neq 0$.
 
 This observation is important on its own, independent of any
@@ -1545,11 +1589,359 @@ Whether the improvement on one side translates to the other is
 an empirical question.
 
 \medskip
-[to be filled in: experimental comparison of (A)--(D) on the
-L-shape test case.]
+We tried configuration~(B) on two test cases: first the convex
+stadium of Section~\ref{sec:tutte-ex-stadium}, then the L-shape
+of the present section. The contrast is sharp.
+
+\paragraph{Stadium ((B) helps).}
+On the smooth convex stadium, (B) lets shape-opt slide the
+disk's boundary between a small set of anchor pins; the slid
+distribution
+(Figure~\ref{fig:stadium-ab-pipeline}\subref{fig:stadium-cmp-opt-slide})
+lowers $\sum \eta^2$ on the disk relative to (A), and the
+proportional-arc-length pullback transfers that improvement to
+the physical side cleanly
+(\subref{fig:stadium-cmp-win-slide}). The slid disk piles
+non-anchor boundary vertices into a few angular gaps---two
+visible clumps of small reference triangles near the left and
+right ends of the disk---and the pullback produces
+correspondingly dense regions of small physical elements near
+the curved end caps. Crucially, those small physical elements
+remain \emph{well-shaped}: the stadium has no concave or convex
+corners for the dense regions to compress into, so aggregate
+distortion improves over (A) on every metric.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.22\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{stadium_sliding/mesh_tutte_circle.png}
+    \caption{Tutte (disk).}
+    \label{fig:stadium-cmp-tutte}
+  \end{subfigure}\\[0.3em]
+  \begin{subfigure}[b]{0.26\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{stadium_sliding/A_optimized.png}
+    \caption{(A) pinned shape-opt.}
+    \label{fig:stadium-cmp-opt-pinned}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.26\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{stadium_sliding/B_optimized.png}
+    \caption{(B) slid shape-opt.}
+    \label{fig:stadium-cmp-opt-slide}
+  \end{subfigure}\\[0.3em]
+  \begin{subfigure}[b]{0.78\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{stadium_sliding/A_winslow.png}
+    \caption{(A) pinned Winslow.}
+    \label{fig:stadium-cmp-win-pinned}
+  \end{subfigure}\\[0.1em]
+  \begin{subfigure}[b]{0.78\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{stadium_sliding/B_winslow.png}
+    \caption{(B) slid-disk Winslow.}
+    \label{fig:stadium-cmp-win-slide}
+  \end{subfigure}
+  \caption{Configurations~(A) and~(B) on the convex stadium of
+  Section~\ref{sec:tutte-ex-stadium}. Row~1: the proportional-arc
+  Tutte disk (\subref{fig:stadium-cmp-tutte}), shared input to
+  both paths. Row~2: shape optimization on the disk---(A) pins
+  every boundary vertex (\subref{fig:stadium-cmp-opt-pinned});
+  (B) pins eight evenly-spaced anchors and lets the remaining
+  boundary vertices slide along the unit circle
+  (\subref{fig:stadium-cmp-opt-slide}). Rows~3--4: pinned Winslow
+  on the physical stadium---(A) uses the original stadium boundary
+  as Dirichlet data (\subref{fig:stadium-cmp-win-pinned}); (B)
+  uses proportional-arc-pulled-back stadium positions derived
+  from the slid disk (\subref{fig:stadium-cmp-win-slide}). The
+  slid-disk redistribution piles boundary density toward the
+  curved end caps, but the smooth convex geometry has no corner
+  for that density to compress into, so element shape in (B)
+  stays good across the whole mesh.}
+  \label{fig:stadium-ab-pipeline}
+\end{figure}
+
+\paragraph{L-shape ((B) fails).}
+On the L-shape with the unit-disk target the same disk-side
+freedom backfires. The slid disk
+(Figure~\ref{fig:l-ab-pipeline}\subref{fig:l-cmp-opt-slide})
+does what shape-opt is told to do: it lowers $\sum \eta^2$ on
+the disk by piling non-corner boundary vertices into the
+angular gaps where proportional-arc Tutte left the density
+coarsest. The visible side effect is a new clump of small
+reference triangles next to two of the pinned L-corners.
+(Disk-side clumping is the diagnostic for dense physical-side
+spacing; the same mechanism applies here, except shape-opt is
+creating the dense spacing rather than the input dictating it.)
+
+The proportional-arc-length pullback transfers that
+redistribution to a new physical L-shape boundary, and a pinned
+Winslow runs with that boundary as Dirichlet data. The output
+(\subref{fig:l-cmp-win-slide}) has a clump of near-degenerate
+elements next to each L-corner that inherited a clumped
+reference region. Aggregate $\sum \eta^2$ on the physical side
+goes \emph{up}, not down: the few corner-adjacent elements with
+extreme distortion swamp the modest improvement everywhere
+else. On the unit-square target the pullback produces a
+physical boundary that pinned Winslow fails to untangle at all.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.26\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_tutte_circle.png}
+    \caption{Tutte (disk).}
+    \label{fig:l-cmp-tutte}
+  \end{subfigure}\\[0.4em]
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_optimized_circle.png}
+    \caption{(A) pinned shape-opt.}
+    \label{fig:l-cmp-opt-pinned}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_optimized_circle_slide.png}
+    \caption{(B) slid shape-opt.}
+    \label{fig:l-cmp-opt-slide}
+  \end{subfigure}\\[0.4em]
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_winslow_circle.png}
+    \caption{(A) pinned Winslow.}
+    \label{fig:l-cmp-win-pinned}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.38\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{l_shape_tangled/mesh_winslow_circle_slide.png}
+    \caption{(B) slid-disk Winslow.}
+    \label{fig:l-cmp-win-slide}
+  \end{subfigure}
+  \caption{Configurations~(A) and~(B) on the L-shape with the
+  unit-disk target. Row~1: the proportional-arc Tutte disk
+  (\subref{fig:l-cmp-tutte}), shared input to both paths. Row~2:
+  shape optimization on the disk---(A) pins all boundary vertices
+  at their Tutte positions (\subref{fig:l-cmp-opt-pinned}); (B)
+  pins only the six L-corners and lets the remaining boundary
+  vertices slide tangentially along the unit circle
+  (\subref{fig:l-cmp-opt-slide}), so shape-opt redistributes
+  boundary spacing and creates two clumps of small reference
+  triangles next to L-corners. Row~3: pinned Winslow on the
+  physical L---(A) uses the original L-shape boundary as
+  Dirichlet data (\subref{fig:l-cmp-win-pinned}); (B) uses
+  proportional-arc-pulled-back L-shape positions derived from
+  the slid disk (\subref{fig:l-cmp-win-slide}). Unlike the
+  stadium (Figure~\ref{fig:stadium-ab-pipeline}), the L-shape's
+  corners give the disk-side clumping in
+  (\subref{fig:l-cmp-opt-slide}) somewhere to compress into on
+  the physical side, producing a tight cluster of near-degenerate
+  elements at the corresponding L-corners in
+  (\subref{fig:l-cmp-win-slide}).}
+  \label{fig:l-ab-pipeline}
+\end{figure}
+
+\paragraph{Moral and outlook.}
+The reference optimizer has no information about how disk-side
+density pulls back to the physical domain; giving it freedom
+over boundary spacing lets it lower its own objective at the
+cost of the pullback. The cost is harmless on the smooth convex
+stadium and catastrophic on the cornered L-shape. (B) is
+therefore not a universally bad idea---it is a bad idea for
+any input whose boundary contains a corner that the optimizer
+can find and exploit. A pinned-shape-opt formulation is the
+safer default for the L-shape and similar polygonal-corner
+inputs. The same failure mode will surface again whenever we
+relax a constraint that was implicitly protecting the physical
+mesh from reference-local exploitation; we already saw it for
+shape-opt flips. Configurations~(C) and~(D) require sliding
+inside the Winslow solve itself; we have started that
+implementation but do not yet have stable results to report
+for the curved-boundary case.
+
+\subsubsection{Example 6: comb (cooperative reference shape)}
+\label{sec:tutte-ex-comb}
+
+The comb is the first example with both narrow features (three teeth
+of width $0.18$ and height $0.18$) and re-entrant corners (the eight
+corners at the tooth bases). It is built to stress every stage of
+the pipeline at once: Tutte must spread sixteen sharp boundary
+corners into a convex target without folding, shape-opt must
+redistribute elements without exploiting the re-entrant corners, and
+the Winslow pullback must cross the tooth-base notches without
+inverting curved elements there.
+
+\paragraph{Geometry and meshing.} The comb has a base rectangle
+$[0, W] \times [0, H_{\mathrm{base}}]$ with $W = 0.92$ and
+$H_{\mathrm{base}} = 0.20$, capped by three rectangular teeth of
+width $0.18$, height $0.18$, gap $0.10$, and side margin $0.10$.
+A constrained Delaunay triangulation with $\sim 25$ boundary samples
+per unit length and $350$ interior samples produces a clean
+reference mesh. The constrained-Delaunay graph contains $2$-cuts at
+the tooth bases (re-entrant corners with no interior point bridging
+them); the helper \texttt{make\_3\_connected.m} adds anchor points
+to restore $3$-connectedness before Tutte.
+
+\paragraph{Tutte to a kinder reference: the dome.}
+The unit disk gives each tooth roughly $20^\circ$ of arc on the
+target boundary, leading to severe boundary clumping in the Tutte
+output and downstream failure (covered separately below). The
+natural alternative is a target shape that cooperates with the
+comb's rough proportions: a rectangle matching the comb's base,
+capped by a half-ellipse on top. We pick the rectangle as
+$[0, W] \times [0, H_{\mathrm{base}}]$ exactly --- so the bottom
+and two short sides of the comb map to the bottom and two short
+sides of the dome unchanged --- and pick the half-ellipse semi-axes
+as $(W/2, b)$ with $b$ such that the cap arc length equals the
+comb's teeth-region arc length $L_{\mathrm{teeth}} = 2.0$. This
+gives $b \approx 0.79$ and an arc-length-isometric mapping from the
+comb's teeth region to the dome's cap. Each tooth gets $\sim
+50^\circ$ of cap arc instead of $\sim 20^\circ$. The
+correspondence is shown in Figure~\ref{fig:combdome-preview}.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\textwidth]{combdome/combdome_preview.png}
+  \caption{Boundary correspondence between the comb (left) and the
+  dome reference (right). Same color = same edge. The bottom and
+  two short sides of the comb (gray) map to the same straight
+  segments of the dome rectangle. Each tooth (blue, orange, yellow)
+  maps to a contiguous arc of the dome cap; the gaps and margins
+  (light gray) get the small angular allotments their physical arc
+  lengths warrant. Mapping is isometric by arc length; the
+  arc-length-matching constraint determines the cap height
+  $b \approx 0.79$.}
+  \label{fig:combdome-preview}
+\end{figure}
+
+The pipeline runs Tutte (with the dome positions installed as
+preserved boundary), shape-opt (interior only, dome boundary
+pinned), and direct Winslow back to the comb. We do \emph{not} use
+$\beta$-homotopy continuation: the dome reference is close enough
+to the comb that the one-shot elliptic solve converges, and the
+homotopy variant locks inverted curved elements at the re-entrant
+tooth-base corners (linear DG-node interpolation between the dome
+and the comb cuts across those corners at intermediate $\beta$,
+producing tangled boundary nodes that the solver cannot recover
+from). Figure~\ref{fig:combdome-pipeline} shows the pipeline.
+
+\begin{figure}[htbp]
+  \centering
+  \begin{subfigure}[b]{0.55\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{combdome/mesh_clean.png}
+    \caption{Clean comb input mesh.}
+    \label{fig:combdome-clean}
+  \end{subfigure}
+  \\[0.5em]
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{combdome/mesh_tutte_dome.png}
+    \caption{Tutte to dome.}
+    \label{fig:combdome-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{combdome/mesh_optimized_dome.png}
+    \caption{Shape-optimized on dome (interior only).}
+    \label{fig:combdome-opt}
+  \end{subfigure}
+  \\[0.5em]
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{combdome/mesh_winslow_from_tutte.png}
+    \caption{Direct Winslow from raw Tutte.}
+    \label{fig:combdome-winslow-tutte}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.48\textwidth}
+    \centering
+    \includegraphics[width=\textwidth]{combdome/mesh_winslow_from_optimized.png}
+    \caption{Direct Winslow from optimized Tutte.}
+    \label{fig:combdome-winslow-opt}
+  \end{subfigure}
+  \caption{Comb pipeline with the dome reference. Top
+  (\subref{fig:combdome-clean}): clean comb input. Middle row: the
+  raw Tutte embedding to the dome
+  (\subref{fig:combdome-tutte}) and the shape-optimized version
+  with dome boundary pinned (\subref{fig:combdome-opt}). Bottom
+  row: direct (one-shot, no $\beta$-homotopy) Winslow back to the
+  comb, started from the raw Tutte
+  (\subref{fig:combdome-winslow-tutte}) versus from the
+  shape-optimized mesh (\subref{fig:combdome-winslow-opt}). The
+  raw-Tutte start produces the only output without inverted
+  elements; the optimized-Tutte start produces a worse final mesh,
+  indicating that the optimizer's local improvements on the dome
+  reference are not aligned with the Winslow energy on the comb
+  and degrade the physical pullback.}
+  \label{fig:combdome-pipeline}
+\end{figure}
+
+Each panel of Figure~\ref{fig:combdome-pipeline} fails for a
+specific, identifiable reason.
+
+\paragraph{Why the dome Tutte clumps along the cap
+(\subref{fig:combdome-tutte}).}
+The arc-length-isometric mapping puts about $60\%$ of the
+boundary nodes on the cap (the comb's teeth-region perimeter
+$L_{\mathrm{teeth}} = 2.0$ is $60\%$ of the comb's total
+perimeter $\approx 3.32$). The dome encloses about $2.7\times$
+the comb's interior area (dome area $\approx 0.755$ versus
+comb area $\approx 0.281$), so the same $350$ interior samples
+are spread thinner; combined with the dense cap boundary,
+Tutte's barycentric solve pulls interior nodes upward toward
+the cap. This is the same clumping mechanism we already
+documented for the disk target, transferred to a different
+shape.
+
+\paragraph{Why shape-opt does not fix it
+(\subref{fig:combdome-opt}).}
+The optimizer redistributes interior nodes but cannot remove
+boundary samples, so it converts the diffuse cap clumping into
+localized pockets at the four base-rectangle corners and a few
+residual cap spots. It also moves interior nodes toward
+configurations that minimize the shape functional \emph{on the
+dome} --- choices that turn out to be hostile to the pullback
+back to the comb (\subref{fig:combdome-winslow-opt}).
+
+\paragraph{Why direct Winslow from raw Tutte leaves slivers at
+the gap walls (\subref{fig:combdome-winslow-tutte}).}
+The gap walls are the comb edges between adjacent teeth ---
+narrow corridors with re-entrant corners at top and bottom.
+Interior nodes that landed near the dome cap during Tutte get
+pulled back into these narrow corridors during the Winslow
+solve, and there is not room for normal-aspect-ratio triangles
+between the wall and the tooth body
+($\mathrm{gap\_w} = 0.10$ versus $\mathrm{tooth\_h} = 0.18$),
+so the result is stacks of thin slivers along the walls.
+
+\paragraph{Why optimized-Tutte $\to$ Winslow inverts
+(\subref{fig:combdome-winslow-opt}).}
+The optimizer's redistribution moved interior nodes away from
+the dome's corners (toward shape-opt-favorable positions on the
+dome). The comb's corners are exactly where the Winslow
+pullback most needs interior support to avoid sharp Jacobian
+transitions. The elliptic solve cannot reposition the
+displaced nodes back to where they are needed in one shot, and
+the result is small but real inversions at the tooth-base
+re-entrant corners.
+
+\paragraph{Verdict.}
+Even with a much kinder reference shape, the Tutte pipeline
+does not produce a fully clean mesh on the comb. Direct Winslow
+from raw Tutte is the only variant that avoids inversions, and
+even it leaves residual slivers; shape optimization on the
+reference actively hurts the downstream pullback. The Tutte
+pipeline as formulated is fragile against re-entrant corners
+and against the optimizer/pullback decoupling, regardless of
+how cooperatively the target shape is chosen.
 
 \iffalse  % commented out: annulus pipeline removed from repo (cut_to_disk.m + annulus_tutte.m deleted)
-\subsubsection{Example 6: annulus (multiply connected input)}
+\subsubsection{Example 6 (old): annulus (multiply connected input)}
 \label{sec:tutte-ex-annulus}
 
 Up to this point every example has been simply connected---a single
@@ -1850,235 +2242,6 @@ here as the motivating example of what goes wrong when the fix
 is omitted.
 \fi  % end commented-out comb example
 
-
-\subsection{How to Present to Persson}
-\label{sec:tutte-present}
-
-
-\subsubsection*{The setup}
-
-Fortunato--Persson 2016 assumes a valid straight-sided reference
-mesh is handed to you as input. 
-Our motivation and question: I want to use Fortunato-Persson as is. As a black box.
-Can we construct the reference a valid and well shaped reference from
-the physical-domain boundary and the topology of the physical
-mesh, ignoring the actual physical positions of the vertex. 
-
-\subsubsection*{The pipeline}
-
-\begin{enumerate}
-  \item Input: a physical mesh (possibly tangled), or just a
-    boundary polygon + linear-vertex topology from a Delaunay.
-  \item \textbf{Tutte's barycentric embedding}: fix boundary
-    vertices on a convex target $P$ (unit circle or unit square);
-    interior vertices are the Laplacian solution. Straight-line
-    embedding with no inverted elements, guaranteed by Tutte (1963).
-  \item \textbf{Shape optimization} on the straight-sided Tutte
-    output: minimize $\sum_K \eta_K^2$ over interior-vertex
-    positions (boundary pinned), using BFGS with the equilateral
-    triangle as the ideal.
-  \item \textbf{High-order promotion} via \texttt{nodealloc}.
-  \item \textbf{Winslow hand-off}: run the original
-    Fortunato--Persson 2016 solver on the Step~1 input, using the
-    result of Step~4 as the reference---our constructed
-    well-shaped reference mesh.
-\end{enumerate}
-
-\subsubsection*{Difficulty progression}
-
-The examples are ordered to walk through a difficulty ladder.
-Each step introduces one new piece of non-triviality while
-keeping the pipeline identical; the point is to show what
-changes as we raise the geometric difficulty.
-
-\begin{itemize}
-  \item \textbf{Example~1 (w2 grid):} sanity check, nothing
-    non-trivial. Tutte recovers the input grid; shape-opt is a
-    no-op.
-  \item \textbf{Example~2 (unit square, unstructured):} Tutte
-    solve is non-trivial (unstructured topology), Winslow is
-    trivial (physical and reference are the same square).
-  \item \textbf{Example~3 (stadium):} Tutte solve non-trivial
-    \emph{and} Winslow non-trivial. Everything still works
-    cleanly because the physical is convex and smooth.
-  \item \textbf{Example~4 (starfish):} smooth but now
-    non-convex. The per-arm wedge-compression mechanism appears
-    on the disk reference; Winslow's bounded-distortion map
-    transports it back into a valid physical mesh.
-  \item \textbf{Example~5 (L-shape):} sharp concave corners.
-    Pipeline still works in pinned-boundary mode but the
-    concave-corner geometry introduces additional caveats.
-\end{itemize}
-
-\subsubsection*{Walking through the examples}
-
-\begin{itemize}
-  \item \textbf{Example~1 (Section~\ref{sec:tutte-ex-w2}): regular
-    grid from \texttt{w2.m}.} Sanity check. The tangled input's
-    underlying topology is a regular $11 \times 11$ grid of
-    right-isosceles triangles; Tutte recovers exactly that grid
-    from the topology alone, and shape-opt starts at a stationary
-    point because the uniform grid is already a local minimum of
-    $\sum_K \eta_K^2$. The Winslow hand-off then reproduces the
-    canonical \texttt{w2.m} output.
-
-  \item \textbf{Example~2 (Section~\ref{sec:tutte-ex-unstructured}):
-    unstructured Delaunay on the unit square.} Here the physical
-    domain and the Tutte target are both the unit square, so the
-    Winslow step is trivial: given the constructed reference
-    mesh, Winslow recovers it unchanged (identity map). The
-    interesting part is the \emph{Tutte solve and shape-opt}.
-    Unlike Example~1 the topology is unstructured (random
-    interior points, varying valences), so Tutte's Laplacian
-    system is genuinely non-trivial and shape optimization has
-    real work to do to turn the Laplacian embedding into a
-    well-shaped triangulation. This example validates the Tutte
-    $+$ shape-opt sub-pipeline as a reference-mesh generator in
-    isolation from Winslow.
-
-  \item \textbf{Example~3 (Section~\ref{sec:tutte-ex-stadium}):
-    convex stadium.} The first case where every stage is doing
-    non-trivial work \emph{and} produces a clean output. Aspect
-    ratio $3\!:\!1$ gives Tutte a substantive mapping problem.
-    Two sliver clumps appear on the Tutte disk---one per
-    semicircular end-cap of the physical---establishing
-    ``clumps on the reference are diagnostics of physical
-    boundary density regions'' as a general framing.
-    Winslow on both paths (with and without shape-opt)
-    converges quickly and the two outputs are visually
-    indistinguishable.
-
-  \item \textbf{Example~4 (Section~\ref{sec:tutte-ex-starfish}):
-    smooth non-convex starfish.} The first case where every
-    stage is doing non-trivial work.
-    \emph{Key difficulty}: each arm has a perimeter share
-    comparable to the bays' but occupies roughly $1/5$ of the
-    area, so Tutte's proportional-arc mapping compresses each
-    arm onto a thin angular wedge of the disk, producing an
-    inward fan of slivers
-    (Fig.~\ref{fig:star-pipeline}\subref{fig:star-tutte}).
-    Shape-opt cannot un-compress those wedges because the
-    boundary is pinned; it only polishes interior positions.
-    \emph{How it still works}: Winslow's reference-to-physical
-    map has bounded distortion on smooth boundaries, and the
-    local Jacobian---radially-stretching, tangentially-gentle in
-    an arm---composes with the slivered reference triangles to
-    produce moderate-aspect-ratio triangles on the physical arms
-    (Fig.~\ref{fig:star-pipeline}\subref{fig:star-winslow}).
-    The pipeline outputs a clean physical mesh despite the
-    unflattering intermediate geometry.
-    \emph{Cost of shape-opt}: the BFGS optimizer runs
-    $\sim 250$ iterations with analytic gradients, and $\sum
-    \eta^2$ drops by roughly half on the reference. By
-    $\eta$-based metrics the shape-opt pipeline wins (mean
-    $\eta^2$ $3.51$ vs $6.84$; max $\eta$ $4.70$ vs $10.46$).
-    But the ablation in
-    Fig.~\ref{fig:star-pipeline}\subref{fig:star-winslow-from-tutte}
-    shows the no-shape-opt Winslow output is visually comparable
-    and can even look more uniform in element size---because
-    $\eta$ is scale-invariant, shape-opt has no preference for
-    equally-sized elements, only for equally-\emph{shaped} ones.
-    See Section~\ref{sec:tutte-ex-starfish} for the detailed
-    discussion and implications for size-aware objectives.
-\end{itemize}
-
-\subsubsection*{What works cleanly}
-
-\begin{itemize}
-  \item \textbf{Simply connected smooth non-convex domains (the
-    starfish).} The pipeline produces dramatically cleaner
-    physical meshes than the raw Delaunay input. The Winslow
-    step transports the reference mesh back to the physical
-    domain smoothly, and the per-arm sliver fans on the disk
-    unwind into decent radial fans on the arms. The remaining
-    artefact---a boundary-adjacent sliver ring on the disk, one
-    sliver fan per physical arm---is structural to the
-    convex-target choice and motivates the sliding / flipping
-    extensions.
-  \item \textbf{Simply connected with narrow pointy appendages}
-    (hand, star, dolphin fluke). Tutte's theorem requires the
-    linear-vertex graph to be $3$-connected; pointy convex corners
-    produce degree-$2$ boundary vertices that violate this. Fix:
-    detect degree-$2$ boundary vertices, plant an interior anchor
-    nudged inward from the boundary. Systematic detection,
-    closed-form fix, works without manual tuning.
-\end{itemize}
-
-\subsubsection*{Extensions we explored}
-
-\begin{itemize}
-  \item \textbf{Boundary sliding in shape optimization.} Let
-    boundary vertices slide tangentially along $\partial P$ during
-    the optimization (angles for circle, arc-lengths for polygon).
-    Produces substantially better reference-mesh quality: on the
-    L-shape, $\sum \eta^2$ drops by $\sim 45\%$ relative to the
-    pinned-boundary version.
-  \item \textbf{Proportional-arc Tutte + corner pinning + derive.}
-    When the reference boundary slides, the Winslow hand-off
-    loses reference--physical correspondence and Picard diverges.
-    Fix: (i) map the input's boundary onto $\partial P$ by
-    proportional arc length so domain corners land at
-    topologically-correct places; (ii) pin those corners during
-    shape optimization so they don't drift; (iii) at hand-off
-    time, \emph{derive} the physical-boundary Dirichlet data
-    from the slid reference via proportional-arc mapping rather
-    than reusing the input's sampling. The derive step is the
-    component that makes Winslow converge; the others ensure the
-    derived physical domain retains its correct geometry.
-\end{itemize}
-
-\subsubsection*{Where it breaks}
-
-\begin{itemize}
-  \item \textbf{Simply connected with sharp concave corners (L-shape).}
-    The sliding extension improves reference quality, but the
-    proportional-arc map transports boundary clustering from the
-    reference onto the physical, and clustered vertices at a
-    physical concave corner produce sliver outliers. Net effect
-    on the L-shape: sliding improves the reference mesh
-    ($\sum \eta^2$ down), but the final Winslow output is
-    \emph{worse} than the pinned-boundary pipeline at the worst
-    element (max $\eta$ jumps from $6.7$ to $16.5$). Pinned
-    Winslow stays the primary pipeline for this class of domain.
-  \item \textbf{Multiply connected domains.} Tutte requires a
-    topological disk. A hole-slitting preprocess (\texttt{cut\_to\_disk})
-    is the classical remedy; we implemented and removed it.
-    Currently out of scope.
-\end{itemize}
-
-\subsubsection*{Open directions}
-
-\begin{itemize}
-  \item \textbf{Edge flipping + smoothing alternation.} Lawson's
-    flipping algorithm terminates at the Delaunay of the current
-    vertex positions; alternating it with shape optimization is
-    known to drive $\sum \eta^2$ close to a local minimum that is
-    ``as good as it gets'' for the fixed vertex set on the
-    reference. Cheap to add, likely big win on the reference,
-    unclear how much propagates to the physical.
-  \item \textbf{Angle-gap barrier in sliding.} Soft penalty on
-    clustering in the slide step so that the beneficial
-    redistribution happens without the pathological clustering at
-    concave-corner regions on the physical.
-  \item \textbf{Physical-aware shape-opt objective.} Instead of
-    minimizing $\sum \eta^2$ on the reference, minimize a proxy
-    for the post-Winslow mesh quality (e.g., $\sum \eta^2$
-    evaluated on the derived physical boundary). Addresses the
-    reference-vs-physical mismatch directly rather than working
-    around it.
-\end{itemize}
-
-\subsubsection*{Honest framing of the contribution}
-
-We are extending empirical FP-2016 to the case of
-reference-mesh-from-scratch. We inherit the same
-``works-in-practice-on-our-test-cases'' standard as the 2016 paper;
-we do not prove convergence or optimality. The scope is simply
-connected 2D domains, with specific remedies for narrow
-appendages (anchoring) and curved targets (\texttt{msh.fd}
-hookup). Boundary sliding is a further extension that is an
-unalloyed improvement for convex or smooth physical domains, and
-a more nuanced tradeoff for sharp-cornered non-convex ones.
 
 
 \bibliographystyle{plain}

@@ -1,29 +1,39 @@
 \contentsline {section}{\numberline {0}The 2016 formulation (brief recap)}{2}{section.0}%
 \contentsline {subsection}{\numberline {0.1}Numerical Results/Tests}{2}{subsection.0.1}%
 \contentsline {section}{\numberline {1}$W$ modification to achieve reference element shape}{3}{section.1}%
-\contentsline {subsection}{\numberline {1.1}Target metric}{5}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.1}Target metric}{3}{subsection.1.1}%
 \contentsline {subsection}{\numberline {1.2}Modified split form}{5}{subsection.1.2}%
 \contentsline {paragraph}{Heuristic nature of the extension.}{5}{section*.6}%
 \contentsline {subsection}{\numberline {1.3}Continuity of $W$ and the $\tilde \alpha $ projection}{5}{subsection.1.3}%
 \contentsline {subsection}{\numberline {1.4}Numerical Results/Tests}{6}{subsection.1.4}%
-\contentsline {paragraph}{Running the same modification on the skewed reference (\texttt {w2\_skewed\_W.m}).}{6}{section*.8}%
+\contentsline {paragraph}{Running the same modification on the skewed reference (\texttt {w2\_skewed\_W.m}).}{7}{section*.8}%
 \contentsline {subsection}{\numberline {1.5}Summary}{8}{subsection.1.5}%
-\contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{8}{section.2}%
-\contentsline {subsection}{\numberline {2.1}Extracting the topology}{9}{subsection.2.1}%
-\contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{9}{subsection.2.2}%
-\contentsline {subsection}{\numberline {2.3}Shape optimization of the straight-sided mesh}{10}{subsection.2.3}%
-\contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{11}{subsection.2.4}%
-\contentsline {subsection}{\numberline {2.5}Numerical examples}{11}{subsection.2.5}%
-\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt {w2.m} topology}{11}{subsubsection.2.5.1}%
+\contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{9}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Extracting the topology}{10}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{10}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Shape optimization of the straight-sided mesh}{11}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{12}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Numerical examples}{12}{subsection.2.5}%
+\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt {w2.m} topology}{12}{subsubsection.2.5.1}%
 \contentsline {subsubsection}{\numberline {2.5.2}Example 2: unstructured Delaunay on the unit square}{12}{subsubsection.2.5.2}%
 \contentsline {subsubsection}{\numberline {2.5.3}Example 3: convex stadium}{14}{subsubsection.2.5.3}%
 \contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{14}{section*.13}%
 \contentsline {subsubsection}{\numberline {2.5.4}Example 4: smooth non-convex starfish}{14}{subsubsection.2.5.4}%
-\contentsline {paragraph}{Clumping on the Tutte disk as a diagnostic.}{17}{section*.16}%
-\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{17}{section*.17}%
-\contentsline {paragraph}{Aside: what shape optimization actually optimizes.}{17}{section*.19}%
+\contentsline {paragraph}{Clumping on the Tutte disk as a diagnostic.}{16}{section*.16}%
+\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{18}{section*.17}%
+\contentsline {paragraph}{Aside: what shape optimization actually optimizes.}{18}{section*.19}%
 \contentsline {subsubsection}{\numberline {2.5.5}Example 5: non-convex L-shape, two target shapes}{18}{subsubsection.2.5.5}%
-\contentsline {paragraph}{Unit-square target.}{18}{section*.20}%
-\contentsline {paragraph}{Unit-disk target.}{18}{section*.22}%
-\contentsline {paragraph}{Aside: what happens if we let boundary nodes slide?}{20}{section*.24}%
-\contentsline {subsection}{\numberline {2.6}How to Present to Persson}{20}{subsection.2.6}%
+\contentsline {paragraph}{Unit-square target.}{19}{section*.20}%
+\contentsline {paragraph}{Unit-disk target.}{19}{section*.22}%
+\contentsline {paragraph}{Aside: what happens if we let boundary nodes slide?}{19}{section*.24}%
+\contentsline {paragraph}{Stadium ((B) helps).}{20}{section*.25}%
+\contentsline {paragraph}{L-shape ((B) fails).}{22}{section*.27}%
+\contentsline {paragraph}{Moral and outlook.}{22}{section*.29}%
+\contentsline {subsubsection}{\numberline {2.5.6}Example 6: comb (cooperative reference shape)}{22}{subsubsection.2.5.6}%
+\contentsline {paragraph}{Geometry and meshing.}{22}{section*.30}%
+\contentsline {paragraph}{Tutte to a kinder reference: the dome.}{22}{section*.31}%
+\contentsline {paragraph}{Why the dome Tutte clumps along the cap (\subref {fig:combdome-tutte}).}{24}{section*.34}%
+\contentsline {paragraph}{Why shape-opt does not fix it (\subref {fig:combdome-opt}).}{24}{section*.35}%
+\contentsline {paragraph}{Why direct Winslow from raw Tutte leaves slivers at the gap walls (\subref {fig:combdome-winslow-tutte}).}{26}{section*.36}%
+\contentsline {paragraph}{Why optimized-Tutte $\to $ Winslow inverts (\subref {fig:combdome-winslow-opt}).}{26}{section*.37}%
+\contentsline {paragraph}{Verdict.}{26}{section*.38}%

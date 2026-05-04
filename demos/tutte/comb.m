@@ -1,19 +1,28 @@
-% comb_tangled.m - Tangled comb-shaped input through the Tutte pipeline,
-% tested against both unit-square and unit-circle computational domains.
+% comb.m - Comb-shaped input through the Tutte pipeline, tested against
+% both unit-square and unit-circle computational domains.
+%
+% No interior tangling --- the comb's boundary alone (16 sharp corners,
+% four narrow teeth) is a non-trivial untangling problem on its own.
+% Mesh resolution is set so each tooth has roughly 3 layers of elements
+% across its width.
 
 rng(1);
 porder = 4;
 
 % --- Comb parameters -----------------------------------------------------
+% Very mild comb: 3 teeth, aspect ~ 1:1 (square nubs of width 0.18). The
+% aggressive 4-teeth 4:1 version inverts at beta=0.3; the mild 3-teeth 2:1
+% version inverts at beta=0.5; this one tests whether the pipeline can
+% complete to beta=1 at all on comb-like geometries.
 W       = 0.92;
 H_base  = 0.20;
-H_top   = 0.70;
+H_top   = 0.38;     % tooth height = H_top - H_base = 0.18 (~1:1 aspect)
 margin  = 0.10;
-tooth_w = 0.12;
-gap_w   = 0.08;
-n_teeth = 4;
-n_per_edge_density = 10;   % boundary samples per unit length
-n_interior = 60;
+tooth_w = 0.18;
+gap_w   = 0.10;
+n_teeth = 3;
+n_per_edge_density = 25;
+n_interior = 350;
 
 % --- Corners of the comb (CCW) ------------------------------------------
 C = [0, 0; W, 0; W, H_base];
@@ -47,6 +56,15 @@ while size(int_pts, 1) < n_interior
     end
 end
 
+% --- Repair 3-connectedness of the linear-vertex graph ------------------
+% Tutte's theorem requires 3-connectedness; comb-style domains with thin
+% teeth can have constrained-Delaunay 2-cuts at the tooth bases. The helper
+% adds interior anchor points until no 2-cut remains.
+[int_pts, anchor_info] = make_3_connected(bnd_pts, int_pts, ...
+    'MinSpacing', 0.01, 'NudgeStep', 0.02);
+fprintf('make_3_connected: %d iterations, %d anchors added, %d cuts remaining\n', ...
+    anchor_info.iters, anchor_info.added, anchor_info.final_cuts);
+
 all_pts = [bnd_pts; int_pts];
 n_b = size(bnd_pts, 1);
 ce  = [(1:n_b)', [(2:n_b)'; 1]];
@@ -59,43 +77,23 @@ msh_clean = ml2msh(all_pts, tri, bndexpr);
 msh_clean = mshcurved(msh_clean, []);
 msh_clean = nodealloc(msh_clean, porder);
 
-figdir = 'figures/comb_tangled';
+figdir = 'figures/comb';
 if ~exist(figdir, 'dir'), mkdir(figdir); end
 
 fprintf('clean comb mesh:\n'); print_quality(msh_clean);
-[ok, pair] = is_3_connected_diagnostic(msh_clean);
-if ok
-    fprintf('graph is 3-connected.\n');
-else
-    fprintf('graph NOT 3-connected; removing %d, %d disconnects at (%.3f, %.3f), (%.3f, %.3f)\n', ...
-            pair(1), pair(2), msh_clean.p(1, pair(1)), msh_clean.p(2, pair(1)), ...
-            msh_clean.p(1, pair(2)), msh_clean.p(2, pair(2)));
-end
+% (3-connectedness already established by make_3_connected above; the
+% O(V^2) brute-force diagnostic that lived here was prohibitive at this
+% mesh resolution.)
 plot_mesh(msh_clean, fullfile(figdir, 'mesh_clean.png'));
 
-% --- Tangle ---------------------------------------------------------------
-msh_tangled = msh_clean;
-is_bnd_lin = boundary_linear_mask(msh_tangled);
-amp = 0.2;
-d_lin = amp * (rand(size(msh_tangled.p)) - 0.5) * 2;
-d_lin(:, is_bnd_lin) = 0;
-msh_tangled.p = msh_tangled.p + d_lin;
-msh_tangled = nodealloc(msh_tangled, porder);
-
-is_bnd_dg = boundary_dg_mask(msh_tangled);
-d_ho = 0.05 * (rand(size(msh_tangled.p1)) - 0.5) * 2;
-d_ho(is_bnd_dg) = 0;
-msh_tangled.p1 = msh_tangled.p1 + d_ho;
-
-fprintf('\ntangled input:\n'); print_quality(msh_tangled);
-plot_mesh(msh_tangled, fullfile(figdir, 'mesh_tangled.png'));
-
-% --- Pipeline with two targets ------------------------------------------
-for target_shape = {'square', 'circle'}
+% --- Pipeline (circle target only; square target is degenerate because
+%     the comb's 16 sharp boundary corners don't fit onto the square's 4
+%     corners --- Tutte produces a configuration with eta ~ 1e6).
+for target_shape = {'circle'}
     ts = target_shape{1};
     fprintf('\n=== target: %s ===\n', ts);
 
-    msh_t = tutte_embedding(msh_tangled, 'TargetShape', ts);
+    msh_t = tutte_embedding(msh_clean, 'TargetShape', ts);
     msh_t = nodealloc(msh_t, porder);
     fprintf('after Tutte:\n'); print_quality(msh_t);
     plot_mesh(msh_t, fullfile(figdir, sprintf('mesh_tutte_%s.png', ts)));
@@ -107,13 +105,15 @@ for target_shape = {'square', 'circle'}
             info.F_initial, info.F_final, info.iterations);
     plot_mesh(msh_o, fullfile(figdir, sprintf('mesh_optimized_%s.png', ts)));
 
-    % Winslow: optimised Tutte as reference, tangled input's comb
-    % boundary as Dirichlet data.
+    % Winslow with beta-homotopy continuation (Fortunato thesis eq. 2.26):
+    % step the boundary gradually from the disk reference to the comb
+    % target in n_steps stages, each a small, well-conditioned sub-problem.
     try
-        curvep1 = msh_o.p1;
-        is_bnd_dg_ref = boundary_dg_mask(msh_o);
-        curvep1(is_bnd_dg_ref) = msh_tangled.p1(is_bnd_dg_ref);
-        msh_w = elliptic_smoothing(msh_o, curvep1, false);
+        n_steps = 10;
+        ws_opts = struct('alpha', 0.5, 'maxiter', 100, 'tol', 1e-5);
+        [msh_w, hinfo] = winslow_homotopy(msh_o, msh_clean, n_steps, ws_opts);
+        fprintf('homotopy: %d/%d stages converged. completed=%d.\n', ...
+                hinfo.converged_steps, n_steps, hinfo.completed);
         fprintf('after Winslow:\n'); print_quality(msh_w);
         plot_mesh(msh_w, fullfile(figdir, sprintf('mesh_winslow_%s.png', ts)));
     catch ME

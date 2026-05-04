@@ -43,6 +43,7 @@
 \newlabel{fig:w2_skewed}{{2}{3}{Slight variation of \texttt {w2.m}: one interior vertex of the $11 \times 11$ reference at $p=4$ is displaced toward a neighbor, creating a sliver cluster. (\subref {fig:ref-skewed}) Skewed reference with $\max \eta = 4.63$. (\subref {fig:tangled-skewed}) Boundary on side~4 displaced by $0.5 \sin (\pi y)$, producing heavy tangling near the perturbed edge on top of the reference-induced sliver. (\subref {fig:smoothed-skewed}) After unmodified Winslow: elements are valid, but the reference skew persists, with $\max \eta = 7.17$ on the sliver in the upper-right.\relax }{figure.caption.3}{}}
 \@writefile{toc}{\contentsline {section}{\numberline {1}$W$ modification to achieve reference element shape}{3}{section.1}\protected@file@percent }
 \newlabel{sec:W-mod}{{1}{3}{$W$ modification to achieve reference element shape}{section.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Target metric}{3}{subsection.1.1}\protected@file@percent }
 \newlabel{fig:hist-I-ref-skewed}{{3a}{4}{Reference\caption@thelabel \relax }{figure.caption.4}{}}
 \newlabel{sub@fig:hist-I-ref-skewed}{{a}{4}{Reference\caption@thelabel \relax }{figure.caption.4}{}}
 \newlabel{fig:hist-I-tangled-skewed}{{3b}{4}{Tangled\caption@thelabel \relax }{figure.caption.4}{}}
@@ -59,7 +60,6 @@
 \newlabel{sub@fig:hist-eta-smoothed-skewed}{{c}{4}{Smoothed\caption@thelabel \relax }{figure.caption.5}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {4}{\ignorespaces Per-element shape distortion metric $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$\nobreakspace  {}\cite  {liu1994relationship,shi2023local} for the \texttt  {w2\_skewed} test. $\eta \in [1, \infty )$ with $\eta = 1$ at conformal (ideal) elements; unlike $I$, $\eta $ detects straight-sided slivers. (\subref  {fig:hist-eta-ref-skewed}) Reference: $\max \eta = 4.63$, mean $1.53$---the right tail is the sliver cluster around the moved vertex. (\subref  {fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$. (\subref  {fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$, mean $2.25$---the sliver cluster persists as the worst element in the smoothed output, motivating the $W$-modification in Section\nobreakspace  {}\ref {sec:W-mod}.\relax }}{4}{figure.caption.5}\protected@file@percent }
 \newlabel{fig:w2_skewed_hist_eta}{{4}{4}{Per-element shape distortion metric $\eta = \|J\|_F^2 / (d \, |\det J|^{2/d})$~\cite {liu1994relationship,shi2023local} for the \texttt {w2\_skewed} test. $\eta \in [1, \infty )$ with $\eta = 1$ at conformal (ideal) elements; unlike $I$, $\eta $ detects straight-sided slivers. (\subref {fig:hist-eta-ref-skewed}) Reference: $\max \eta = 4.63$, mean $1.53$---the right tail is the sliver cluster around the moved vertex. (\subref {fig:hist-eta-tangled-skewed}) Tangled: $\max \eta = 272$. (\subref {fig:hist-eta-smoothed-skewed}) Smoothed: $\max \eta = 7.17$, mean $2.25$---the sliver cluster persists as the worst element in the smoothed output, motivating the $W$-modification in Section~\ref {sec:W-mod}.\relax }{figure.caption.5}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {1.1}Target metric}{5}{subsection.1.1}\protected@file@percent }
 \newlabel{eq:tildeg}{{6}{5}{Target metric}{equation.1.6}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.2}Modified split form}{5}{subsection.1.2}\protected@file@percent }
 \newlabel{eq:Wsplit-alpha}{{7}{5}{Modified split form}{equation.1.7}{}}
@@ -71,7 +71,6 @@
 \newlabel{eq:Wnodal}{{9}{6}{Continuity of $W$ and the $\tilde \alpha $ projection}{equation.1.9}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.4}Numerical Results/Tests}{6}{subsection.1.4}\protected@file@percent }
 \newlabel{sec:W-numerical}{{1.4}{6}{Numerical Results/Tests}{subsection.1.4}{}}
-\@writefile{toc}{\contentsline {paragraph}{Running the same modification on the skewed reference (\texttt  {w2\_skewed\_W.m}).}{6}{section*.8}\protected@file@percent }
 \newlabel{fig:ref-W}{{5a}{7}{Reference mesh.\relax }{figure.caption.7}{}}
 \newlabel{sub@fig:ref-W}{{a}{7}{Reference mesh.\relax }{figure.caption.7}{}}
 \newlabel{fig:tangled-W}{{5b}{7}{Initial configuration.\relax }{figure.caption.7}{}}
@@ -80,56 +79,55 @@
 \newlabel{sub@fig:smoothed-W}{{c}{7}{After $W$-modified Winslow\relax }{figure.caption.7}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {5}{\ignorespaces \texttt  {w2\_W}: the \texttt  {w2.m} setup run through the $W$-modified Picard solver with $W_h$ constructed by consistent $L^2$ projection onto $V_h^p$. (\subref  {fig:ref-W}) and (\subref  {fig:tangled-W}) are identical to their counterparts in Figure\nobreakspace  {}\ref {fig:w2}. In (\subref  {fig:smoothed-W}) the two \textcolor {red}{red} elements (centroids $(0.46, 0.37)$ and $(0.50, 0.47)$) have $\min J < 0$, so the $W$-modified output is inverted on a problem where the original 2016 formulation produced a valid mesh.\relax }}{7}{figure.caption.7}\protected@file@percent }
 \newlabel{fig:w2_W}{{5}{7}{\texttt {w2\_W}: the \texttt {w2.m} setup run through the $W$-modified Picard solver with $W_h$ constructed by consistent $L^2$ projection onto $V_h^p$. (\subref {fig:ref-W}) and (\subref {fig:tangled-W}) are identical to their counterparts in Figure~\ref {fig:w2}. In (\subref {fig:smoothed-W}) the two \textcolor {red}{red} elements (centroids $(0.46, 0.37)$ and $(0.50, 0.47)$) have $\min J < 0$, so the $W$-modified output is inverted on a problem where the original 2016 formulation produced a valid mesh.\relax }{figure.caption.7}{}}
+\@writefile{toc}{\contentsline {paragraph}{Running the same modification on the skewed reference (\texttt  {w2\_skewed\_W.m}).}{7}{section*.8}\protected@file@percent }
 \newlabel{eq:tildealpha-split}{{10}{7}{Running the same modification on the skewed reference (\texttt {w2\_skewed\_W.m})}{equation.1.10}{}}
 \@writefile{toc}{\contentsline {subsection}{\numberline {1.5}Summary}{8}{subsection.1.5}\protected@file@percent }
 \newlabel{sec:W-summary}{{1.5}{8}{Summary}{subsection.1.5}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{8}{section.2}\protected@file@percent }
-\newlabel{sec:tutte}{{2}{8}{Reference-mesh preprocessing via Tutte's embedding}{section.2}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Extracting the topology}{9}{subsection.2.1}\protected@file@percent }
-\newlabel{sec:tutte-topology}{{2.1}{9}{Extracting the topology}{subsection.2.1}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{9}{subsection.2.2}\protected@file@percent }
-\newlabel{sec:tutte-embedding}{{2.2}{9}{Tutte's barycentric embedding}{subsection.2.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Reference-mesh preprocessing via Tutte's embedding}{9}{section.2}\protected@file@percent }
+\newlabel{sec:tutte}{{2}{9}{Reference-mesh preprocessing via Tutte's embedding}{section.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Extracting the topology}{10}{subsection.2.1}\protected@file@percent }
+\newlabel{sec:tutte-topology}{{2.1}{10}{Extracting the topology}{subsection.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Tutte's barycentric embedding}{10}{subsection.2.2}\protected@file@percent }
+\newlabel{sec:tutte-embedding}{{2.2}{10}{Tutte's barycentric embedding}{subsection.2.2}{}}
 \newlabel{eq:tutte-bary}{{11}{10}{Tutte's barycentric embedding}{equation.2.11}{}}
 \newlabel{eq:tutte-linear}{{12}{10}{Tutte's barycentric embedding}{equation.2.12}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Shape optimization of the straight-sided mesh}{10}{subsection.2.3}\protected@file@percent }
-\newlabel{sec:tutte-shape}{{2.3}{10}{Shape optimization of the straight-sided mesh}{subsection.2.3}{}}
 \citation{shi2023local}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Shape optimization of the straight-sided mesh}{11}{subsection.2.3}\protected@file@percent }
+\newlabel{sec:tutte-shape}{{2.3}{11}{Shape optimization of the straight-sided mesh}{subsection.2.3}{}}
 \newlabel{eq:tutte-F}{{14}{11}{Shape optimization of the straight-sided mesh}{equation.2.14}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{11}{subsection.2.4}\protected@file@percent }
-\newlabel{sec:tutte-highorder}{{2.4}{11}{Promotion to high-order reference}{subsection.2.4}{}}
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Numerical examples}{11}{subsection.2.5}\protected@file@percent }
-\newlabel{sec:tutte-examples}{{2.5}{11}{Numerical examples}{subsection.2.5}{}}
-\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt  {w2.m} topology}{11}{subsubsection.2.5.1}\protected@file@percent }
-\newlabel{sec:tutte-ex-w2}{{2.5.1}{11}{Example 1: regular grid, \texttt {w2.m} topology}{subsubsection.2.5.1}{}}
-\newlabel{fig:w2-tutte-input}{{6a}{12}{Input: tangled mesh from \texttt {w2.m}.\relax }{figure.caption.9}{}}
-\newlabel{sub@fig:w2-tutte-input}{{a}{12}{Input: tangled mesh from \texttt {w2.m}.\relax }{figure.caption.9}{}}
-\newlabel{fig:w2-tutte-recovered}{{6b}{12}{After Tutte with target~$=[0,1]^2$.\relax }{figure.caption.9}{}}
-\newlabel{sub@fig:w2-tutte-recovered}{{b}{12}{After Tutte with target~$=[0,1]^2$.\relax }{figure.caption.9}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \texttt  {w2\_tutte.m}: the pipeline applied to \texttt  {w2.m}'s tangled input. (\subref  {fig:w2-tutte-input}) is identical to Figure\nobreakspace  {}\ref {fig:w2}(\subref  {fig:tangled}), shown here for reference. (\subref  {fig:w2-tutte-recovered}) is the Tutte output.\relax }}{12}{figure.caption.9}\protected@file@percent }
-\newlabel{fig:w2-tutte}{{6}{12}{\texttt {w2\_tutte.m}: the pipeline applied to \texttt {w2.m}'s tangled input. (\subref {fig:w2-tutte-input}) is identical to Figure~\ref {fig:w2}(\subref {fig:tangled}), shown here for reference. (\subref {fig:w2-tutte-recovered}) is the Tutte output.\relax }{figure.caption.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Promotion to high-order reference}{12}{subsection.2.4}\protected@file@percent }
+\newlabel{sec:tutte-highorder}{{2.4}{12}{Promotion to high-order reference}{subsection.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.5}Numerical examples}{12}{subsection.2.5}\protected@file@percent }
+\newlabel{sec:tutte-examples}{{2.5}{12}{Numerical examples}{subsection.2.5}{}}
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.1}Example 1: regular grid, \texttt  {w2.m} topology}{12}{subsubsection.2.5.1}\protected@file@percent }
+\newlabel{sec:tutte-ex-w2}{{2.5.1}{12}{Example 1: regular grid, \texttt {w2.m} topology}{subsubsection.2.5.1}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.2}Example 2: unstructured Delaunay on the unit square}{12}{subsubsection.2.5.2}\protected@file@percent }
 \newlabel{sec:tutte-ex-unstructured}{{2.5.2}{12}{Example 2: unstructured Delaunay on the unit square}{subsubsection.2.5.2}{}}
+\newlabel{fig:w2-tutte-input}{{6a}{13}{Input: tangled mesh from \texttt {w2.m}.\relax }{figure.caption.9}{}}
+\newlabel{sub@fig:w2-tutte-input}{{a}{13}{Input: tangled mesh from \texttt {w2.m}.\relax }{figure.caption.9}{}}
+\newlabel{fig:w2-tutte-recovered}{{6b}{13}{After Tutte with target~$=[0,1]^2$.\relax }{figure.caption.9}{}}
+\newlabel{sub@fig:w2-tutte-recovered}{{b}{13}{After Tutte with target~$=[0,1]^2$.\relax }{figure.caption.9}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {6}{\ignorespaces \texttt  {w2\_tutte.m}: the pipeline applied to \texttt  {w2.m}'s tangled input. (\subref  {fig:w2-tutte-input}) is identical to Figure\nobreakspace  {}\ref {fig:w2}(\subref  {fig:tangled}), shown here for reference. (\subref  {fig:w2-tutte-recovered}) is the Tutte output.\relax }}{13}{figure.caption.9}\protected@file@percent }
+\newlabel{fig:w2-tutte}{{6}{13}{\texttt {w2\_tutte.m}: the pipeline applied to \texttt {w2.m}'s tangled input. (\subref {fig:w2-tutte-input}) is identical to Figure~\ref {fig:w2}(\subref {fig:tangled}), shown here for reference. (\subref {fig:w2-tutte-recovered}) is the Tutte output.\relax }{figure.caption.9}{}}
 \newlabel{fig:unstr-clean}{{7a}{13}{Clean random Delaunay.\relax }{figure.caption.10}{}}
 \newlabel{sub@fig:unstr-clean}{{a}{13}{Clean random Delaunay.\relax }{figure.caption.10}{}}
 \newlabel{fig:unstr-tangled}{{7b}{13}{After mild interior tangling.\relax }{figure.caption.10}{}}
 \newlabel{sub@fig:unstr-tangled}{{b}{13}{After mild interior tangling.\relax }{figure.caption.10}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {7}{\ignorespaces Construction of the Example\nobreakspace  {}2 input: a clean random Delaunay triangulation of $[0,1]^2$ (\subref  {fig:unstr-clean}) has its interior linear and high-order nodes mildly perturbed to produce the tangled input of the pipeline (\subref  {fig:unstr-tangled}).\relax }}{13}{figure.caption.10}\protected@file@percent }
 \newlabel{fig:unstr-setup}{{7}{13}{Construction of the Example~2 input: a clean random Delaunay triangulation of $[0,1]^2$ (\subref {fig:unstr-clean}) has its interior linear and high-order nodes mildly perturbed to produce the tangled input of the pipeline (\subref {fig:unstr-tangled}).\relax }{figure.caption.10}{}}
-\newlabel{fig:unstr-pipeline-input}{{8a}{13}{Tangled input.\relax }{figure.caption.11}{}}
-\newlabel{sub@fig:unstr-pipeline-input}{{a}{13}{Tangled input.\relax }{figure.caption.11}{}}
-\newlabel{fig:unstr-pipeline-tutte}{{8b}{13}{Tutte of (a).\relax }{figure.caption.11}{}}
-\newlabel{sub@fig:unstr-pipeline-tutte}{{b}{13}{Tutte of (a).\relax }{figure.caption.11}{}}
-\newlabel{fig:unstr-pipeline-opt}{{8c}{13}{Shape-opt of (b).\relax }{figure.caption.11}{}}
-\newlabel{sub@fig:unstr-pipeline-opt}{{c}{13}{Shape-opt of (b).\relax }{figure.caption.11}{}}
-\newlabel{fig:unstr-pipeline-winslow}{{8d}{13}{Winslow of (a) w.r.t.\ (c).\relax }{figure.caption.11}{}}
-\newlabel{sub@fig:unstr-pipeline-winslow}{{d}{13}{Winslow of (a) w.r.t.\ (c).\relax }{figure.caption.11}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Example\nobreakspace  {}2 pipeline. (\subref  {fig:unstr-pipeline-input}) is the tangled input of Figure\nobreakspace  {}\ref {fig:unstr-setup}(\subref  {fig:unstr-tangled}). (\subref  {fig:unstr-pipeline-tutte}) is the Tutte output. (\subref  {fig:unstr-pipeline-opt}) is the output of shape optimization on the Tutte output. (\subref  {fig:unstr-pipeline-winslow}) is the result of Fortunato--Persson Winslow smoothing with (\subref  {fig:unstr-pipeline-opt}) as the reference mesh and (\subref  {fig:unstr-pipeline-input})'s boundary as Dirichlet data; since the input boundary was left unperturbed, (\subref  {fig:unstr-pipeline-winslow}) is identical to (\subref  {fig:unstr-pipeline-opt}).\relax }}{13}{figure.caption.11}\protected@file@percent }
-\newlabel{fig:unstr-pipeline}{{8}{13}{Example~2 pipeline. (\subref {fig:unstr-pipeline-input}) is the tangled input of Figure~\ref {fig:unstr-setup}(\subref {fig:unstr-tangled}). (\subref {fig:unstr-pipeline-tutte}) is the Tutte output. (\subref {fig:unstr-pipeline-opt}) is the output of shape optimization on the Tutte output. (\subref {fig:unstr-pipeline-winslow}) is the result of Fortunato--Persson Winslow smoothing with (\subref {fig:unstr-pipeline-opt}) as the reference mesh and (\subref {fig:unstr-pipeline-input})'s boundary as Dirichlet data; since the input boundary was left unperturbed, (\subref {fig:unstr-pipeline-winslow}) is identical to (\subref {fig:unstr-pipeline-opt}).\relax }{figure.caption.11}{}}
+\newlabel{fig:unstr-pipeline-input}{{8a}{14}{Tangled input.\relax }{figure.caption.11}{}}
+\newlabel{sub@fig:unstr-pipeline-input}{{a}{14}{Tangled input.\relax }{figure.caption.11}{}}
+\newlabel{fig:unstr-pipeline-tutte}{{8b}{14}{Tutte of (a).\relax }{figure.caption.11}{}}
+\newlabel{sub@fig:unstr-pipeline-tutte}{{b}{14}{Tutte of (a).\relax }{figure.caption.11}{}}
+\newlabel{fig:unstr-pipeline-opt}{{8c}{14}{Shape-opt of (b).\relax }{figure.caption.11}{}}
+\newlabel{sub@fig:unstr-pipeline-opt}{{c}{14}{Shape-opt of (b).\relax }{figure.caption.11}{}}
+\newlabel{fig:unstr-pipeline-winslow}{{8d}{14}{Winslow of (a) w.r.t.\ (c).\relax }{figure.caption.11}{}}
+\newlabel{sub@fig:unstr-pipeline-winslow}{{d}{14}{Winslow of (a) w.r.t.\ (c).\relax }{figure.caption.11}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {8}{\ignorespaces Example\nobreakspace  {}2 pipeline. (\subref  {fig:unstr-pipeline-input}) is the tangled input of Figure\nobreakspace  {}\ref {fig:unstr-setup}(\subref  {fig:unstr-tangled}). (\subref  {fig:unstr-pipeline-tutte}) is the Tutte output. (\subref  {fig:unstr-pipeline-opt}) is the output of shape optimization on the Tutte output. (\subref  {fig:unstr-pipeline-winslow}) is the result of Fortunato--Persson Winslow smoothing with (\subref  {fig:unstr-pipeline-opt}) as the reference mesh and (\subref  {fig:unstr-pipeline-input})'s boundary as Dirichlet data; since the input boundary was left unperturbed, (\subref  {fig:unstr-pipeline-winslow}) is identical to (\subref  {fig:unstr-pipeline-opt}).\relax }}{14}{figure.caption.11}\protected@file@percent }
+\newlabel{fig:unstr-pipeline}{{8}{14}{Example~2 pipeline. (\subref {fig:unstr-pipeline-input}) is the tangled input of Figure~\ref {fig:unstr-setup}(\subref {fig:unstr-tangled}). (\subref {fig:unstr-pipeline-tutte}) is the Tutte output. (\subref {fig:unstr-pipeline-opt}) is the output of shape optimization on the Tutte output. (\subref {fig:unstr-pipeline-winslow}) is the result of Fortunato--Persson Winslow smoothing with (\subref {fig:unstr-pipeline-opt}) as the reference mesh and (\subref {fig:unstr-pipeline-input})'s boundary as Dirichlet data; since the input boundary was left unperturbed, (\subref {fig:unstr-pipeline-winslow}) is identical to (\subref {fig:unstr-pipeline-opt}).\relax }{figure.caption.11}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.3}Example 3: convex stadium}{14}{subsubsection.2.5.3}\protected@file@percent }
 \newlabel{sec:tutte-ex-stadium}{{2.5.3}{14}{Example 3: convex stadium}{subsubsection.2.5.3}{}}
 \@writefile{toc}{\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{14}{section*.13}\protected@file@percent }
-\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Quality and wall-clock comparison of the two Winslow paths on the stadium, $278$ elements. Panel labels refer to Figure\nobreakspace  {}\ref {fig:stadium-pipeline}.\relax }}{14}{table.caption.14}\protected@file@percent }
-\newlabel{tab:stadium-comparison}{{1}{14}{Quality and wall-clock comparison of the two Winslow paths on the stadium, $278$ elements. Panel labels refer to Figure~\ref {fig:stadium-pipeline}.\relax }{table.caption.14}{}}
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.4}Example 4: smooth non-convex starfish}{14}{subsubsection.2.5.4}\protected@file@percent }
 \newlabel{sec:tutte-ex-starfish}{{2.5.4}{14}{Example 4: smooth non-convex starfish}{subsubsection.2.5.4}{}}
 \newlabel{fig:stadium-clean}{{9a}{15}{Physical stadium; red is the right end-cap (the Delaunay triangles that will become the left boundary clump on the disk).\relax }{figure.caption.12}{}}
@@ -142,29 +140,30 @@
 \newlabel{sub@fig:stadium-opt}{{d}{15}{After shape-opt.\relax }{figure.caption.12}{}}
 \newlabel{fig:stadium-winslow}{{9e}{15}{Winslow, after shape-opt.\relax }{figure.caption.12}{}}
 \newlabel{sub@fig:stadium-winslow}{{e}{15}{Winslow, after shape-opt.\relax }{figure.caption.12}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Stadium pipeline with unit-disk target. Row\nobreakspace  {}1: physical stadium with the right end-cap highlighted for tracking. Row\nobreakspace  {}2: no-shape-opt path (Tutte directly into Winslow). Row\nobreakspace  {}3: with-shape-opt path (Tutte $\to $ shape-opt $\to $ Winslow). Both paths produce valid, well-shaped stadium meshes and are nearly indistinguishable---on a convex smooth domain Winslow's bounded-distortion map does most of the work and shape-opt is a modest polish.\relax }}{15}{figure.caption.12}\protected@file@percent }
-\newlabel{fig:stadium-pipeline}{{9}{15}{Stadium pipeline with unit-disk target. Row~1: physical stadium with the right end-cap highlighted for tracking. Row~2: no-shape-opt path (Tutte directly into Winslow). Row~3: with-shape-opt path (Tutte $\to $ shape-opt $\to $ Winslow). Both paths produce valid, well-shaped stadium meshes and are nearly indistinguishable---on a convex smooth domain Winslow's bounded-distortion map does most of the work and shape-opt is a modest polish.\relax }{figure.caption.12}{}}
-\newlabel{fig:star-clean}{{10a}{16}{Physical starfish. Red: an entire arm.\relax }{figure.caption.15}{}}
-\newlabel{sub@fig:star-clean}{{a}{16}{Physical starfish. Red: an entire arm.\relax }{figure.caption.15}{}}
-\newlabel{fig:star-tutte}{{10b}{16}{Tutte (disk).\relax }{figure.caption.15}{}}
-\newlabel{sub@fig:star-tutte}{{b}{16}{Tutte (disk).\relax }{figure.caption.15}{}}
-\newlabel{fig:star-winslow-from-tutte}{{10c}{16}{Winslow, direct from Tutte (no shape-opt).\relax }{figure.caption.15}{}}
-\newlabel{sub@fig:star-winslow-from-tutte}{{c}{16}{Winslow, direct from Tutte (no shape-opt).\relax }{figure.caption.15}{}}
-\newlabel{fig:star-opt}{{10d}{16}{After shape-opt.\relax }{figure.caption.15}{}}
-\newlabel{sub@fig:star-opt}{{d}{16}{After shape-opt.\relax }{figure.caption.15}{}}
-\newlabel{fig:star-winslow}{{10e}{16}{Winslow, after shape-opt.\relax }{figure.caption.15}{}}
-\newlabel{sub@fig:star-winslow}{{e}{16}{Winslow, after shape-opt.\relax }{figure.caption.15}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Starfish pipeline with unit-disk target. The $27$ highlighted triangles fill one arm of the physical starfish (\subref  {fig:star-clean}). Column\nobreakspace  {}2 is the \emph  {no-shape-opt path}: Tutte lays the arm's boundary vertices onto a thin angular wedge of the disk (\subref  {fig:star-tutte}), producing an inward sliver fan, and Winslow transports that fan back to the physical arm (\subref  {fig:star-winslow-from-tutte}) where it unwinds into a decent radial fan of moderate-aspect-ratio triangles. Column\nobreakspace  {}3 is the \emph  {with-shape-opt path}: shape optimization (\subref  {fig:star-opt}) compresses the wedge slightly but cannot reshape its sliver structure with the boundary pinned; Winslow then transports the polished wedge back to a similar radial fan (\subref  {fig:star-winslow}). Shape-opt's contribution is a modest improvement of the worst element on the physical mesh ($\min |J|$ $0.0011\!\to \!0.0026$), not a qualitative change; Winslow does most of the work.\relax }}{16}{figure.caption.15}\protected@file@percent }
-\newlabel{fig:star-pipeline}{{10}{16}{Starfish pipeline with unit-disk target. The $27$ highlighted triangles fill one arm of the physical starfish (\subref {fig:star-clean}). Column~2 is the \emph {no-shape-opt path}: Tutte lays the arm's boundary vertices onto a thin angular wedge of the disk (\subref {fig:star-tutte}), producing an inward sliver fan, and Winslow transports that fan back to the physical arm (\subref {fig:star-winslow-from-tutte}) where it unwinds into a decent radial fan of moderate-aspect-ratio triangles. Column~3 is the \emph {with-shape-opt path}: shape optimization (\subref {fig:star-opt}) compresses the wedge slightly but cannot reshape its sliver structure with the boundary pinned; Winslow then transports the polished wedge back to a similar radial fan (\subref {fig:star-winslow}). Shape-opt's contribution is a modest improvement of the worst element on the physical mesh ($\min |J|$ $0.0011\!\to \!0.0026$), not a qualitative change; Winslow does most of the work.\relax }{figure.caption.15}{}}
-\@writefile{toc}{\contentsline {paragraph}{Clumping on the Tutte disk as a diagnostic.}{17}{section*.16}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{17}{section*.17}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Aside: what shape optimization actually optimizes.}{17}{section*.19}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {9}{\ignorespaces Stadium pipeline with unit-disk target. Red dots in (\subref  {fig:stadium-clean}) and (\subref  {fig:stadium-tutte}) mark the four curvature-transition points $(\pm a, \pm b)$ where the straight sides meet the semicircles (the stadium boundary is $C^1$ smooth there, not cornered---these are curvature-discontinuity points that would anchor any sliding parameterization). Row\nobreakspace  {}1: physical stadium with the right end-cap highlighted for tracking. Row\nobreakspace  {}2: no-shape-opt path (Tutte directly into Winslow). Row\nobreakspace  {}3: with-shape-opt path (Tutte $\to $ shape-opt $\to $ Winslow). Both paths produce valid, well-shaped stadium meshes and are nearly indistinguishable---on a convex smooth domain Winslow's bounded-distortion map does most of the work and shape-opt is a modest polish.\relax }}{15}{figure.caption.12}\protected@file@percent }
+\newlabel{fig:stadium-pipeline}{{9}{15}{Stadium pipeline with unit-disk target. Red dots in (\subref {fig:stadium-clean}) and (\subref {fig:stadium-tutte}) mark the four curvature-transition points $(\pm a, \pm b)$ where the straight sides meet the semicircles (the stadium boundary is $C^1$ smooth there, not cornered---these are curvature-discontinuity points that would anchor any sliding parameterization). Row~1: physical stadium with the right end-cap highlighted for tracking. Row~2: no-shape-opt path (Tutte directly into Winslow). Row~3: with-shape-opt path (Tutte $\to $ shape-opt $\to $ Winslow). Both paths produce valid, well-shaped stadium meshes and are nearly indistinguishable---on a convex smooth domain Winslow's bounded-distortion map does most of the work and shape-opt is a modest polish.\relax }{figure.caption.12}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {1}{\ignorespaces Quality and wall-clock comparison of the two Winslow paths on the stadium, $278$ elements. Panel labels refer to Figure\nobreakspace  {}\ref {fig:stadium-pipeline}.\relax }}{16}{table.caption.14}\protected@file@percent }
+\newlabel{tab:stadium-comparison}{{1}{16}{Quality and wall-clock comparison of the two Winslow paths on the stadium, $278$ elements. Panel labels refer to Figure~\ref {fig:stadium-pipeline}.\relax }{table.caption.14}{}}
+\@writefile{toc}{\contentsline {paragraph}{Clumping on the Tutte disk as a diagnostic.}{16}{section*.16}\protected@file@percent }
+\newlabel{fig:star-clean}{{10a}{17}{Physical starfish. Red: an entire arm.\relax }{figure.caption.15}{}}
+\newlabel{sub@fig:star-clean}{{a}{17}{Physical starfish. Red: an entire arm.\relax }{figure.caption.15}{}}
+\newlabel{fig:star-tutte}{{10b}{17}{Tutte (disk).\relax }{figure.caption.15}{}}
+\newlabel{sub@fig:star-tutte}{{b}{17}{Tutte (disk).\relax }{figure.caption.15}{}}
+\newlabel{fig:star-winslow-from-tutte}{{10c}{17}{Winslow, direct from Tutte (no shape-opt).\relax }{figure.caption.15}{}}
+\newlabel{sub@fig:star-winslow-from-tutte}{{c}{17}{Winslow, direct from Tutte (no shape-opt).\relax }{figure.caption.15}{}}
+\newlabel{fig:star-opt}{{10d}{17}{After shape-opt.\relax }{figure.caption.15}{}}
+\newlabel{sub@fig:star-opt}{{d}{17}{After shape-opt.\relax }{figure.caption.15}{}}
+\newlabel{fig:star-winslow}{{10e}{17}{Winslow, after shape-opt.\relax }{figure.caption.15}{}}
+\newlabel{sub@fig:star-winslow}{{e}{17}{Winslow, after shape-opt.\relax }{figure.caption.15}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {10}{\ignorespaces Starfish pipeline with unit-disk target. The $27$ highlighted triangles fill one arm of the physical starfish (\subref  {fig:star-clean}). Column\nobreakspace  {}2 is the \emph  {no-shape-opt path}: Tutte lays the arm's boundary vertices onto a thin angular wedge of the disk (\subref  {fig:star-tutte}), producing an inward sliver fan, and Winslow transports that fan back to the physical arm (\subref  {fig:star-winslow-from-tutte}) where it unwinds into a decent radial fan of moderate-aspect-ratio triangles. Column\nobreakspace  {}3 is the \emph  {with-shape-opt path}: shape optimization (\subref  {fig:star-opt}) compresses the wedge slightly but cannot reshape its sliver structure with the boundary pinned; Winslow then transports the polished wedge back to a similar radial fan (\subref  {fig:star-winslow}). Shape-opt's contribution is a modest improvement of the worst element on the physical mesh ($\min |J|$ $0.0011\!\to \!0.0026$), not a qualitative change; Winslow does most of the work.\relax }}{17}{figure.caption.15}\protected@file@percent }
+\newlabel{fig:star-pipeline}{{10}{17}{Starfish pipeline with unit-disk target. The $27$ highlighted triangles fill one arm of the physical starfish (\subref {fig:star-clean}). Column~2 is the \emph {no-shape-opt path}: Tutte lays the arm's boundary vertices onto a thin angular wedge of the disk (\subref {fig:star-tutte}), producing an inward sliver fan, and Winslow transports that fan back to the physical arm (\subref {fig:star-winslow-from-tutte}) where it unwinds into a decent radial fan of moderate-aspect-ratio triangles. Column~3 is the \emph {with-shape-opt path}: shape optimization (\subref {fig:star-opt}) compresses the wedge slightly but cannot reshape its sliver structure with the boundary pinned; Winslow then transports the polished wedge back to a similar radial fan (\subref {fig:star-winslow}). Shape-opt's contribution is a modest improvement of the worst element on the physical mesh ($\min |J|$ $0.0011\!\to \!0.0026$), not a qualitative change; Winslow does most of the work.\relax }{figure.caption.15}{}}
+\@writefile{toc}{\contentsline {paragraph}{Quantitative comparison of (c) and (e), with cost.}{18}{section*.17}\protected@file@percent }
 \@writefile{lot}{\contentsline {table}{\numberline {2}{\ignorespaces Quality and wall-clock comparison of the two Winslow paths on the starfish, $218$ elements. Panel labels refer to Figure\nobreakspace  {}\ref {fig:star-pipeline}.\relax }}{18}{table.caption.18}\protected@file@percent }
 \newlabel{tab:starfish-comparison}{{2}{18}{Quality and wall-clock comparison of the two Winslow paths on the starfish, $218$ elements. Panel labels refer to Figure~\ref {fig:star-pipeline}.\relax }{table.caption.18}{}}
+\@writefile{toc}{\contentsline {paragraph}{Aside: what shape optimization actually optimizes.}{18}{section*.19}\protected@file@percent }
 \@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.5}Example 5: non-convex L-shape, two target shapes}{18}{subsubsection.2.5.5}\protected@file@percent }
 \newlabel{sec:tutte-ex-lshape}{{2.5.5}{18}{Example 5: non-convex L-shape, two target shapes}{subsubsection.2.5.5}{}}
-\@writefile{toc}{\contentsline {paragraph}{Unit-square target.}{18}{section*.20}\protected@file@percent }
-\@writefile{toc}{\contentsline {paragraph}{Unit-disk target.}{18}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Unit-square target.}{19}{section*.20}\protected@file@percent }
 \newlabel{fig:l-sq-input}{{11a}{19}{Clean input.\relax }{figure.caption.21}{}}
 \newlabel{sub@fig:l-sq-input}{{a}{19}{Clean input.\relax }{figure.caption.21}{}}
 \newlabel{fig:l-sq-tutte}{{11b}{19}{Tutte (square).\relax }{figure.caption.21}{}}
@@ -175,22 +174,71 @@
 \newlabel{sub@fig:l-sq-winslow}{{d}{19}{Winslow.\relax }{figure.caption.21}{}}
 \@writefile{lof}{\contentsline {figure}{\numberline {11}{\ignorespaces L-shape pipeline with unit-square target. The six L-corners are marked in red; Tutte (\subref  {fig:l-sq-tutte}) places all six on the interior of straight square edges, because the boundary vertices it pins to the four square corners happen to be non-corner samples of the L. The Winslow step (\subref  {fig:l-sq-winslow}) produces a valid-looking L-shape mesh but with one slightly inverted element ($\min I = -0.019$, shown in red) near one of those six vertices that had to develop a sharp corner from a straight reference neighborhood.\relax }}{19}{figure.caption.21}\protected@file@percent }
 \newlabel{fig:l-square-pipeline}{{11}{19}{L-shape pipeline with unit-square target. The six L-corners are marked in red; Tutte (\subref {fig:l-sq-tutte}) places all six on the interior of straight square edges, because the boundary vertices it pins to the four square corners happen to be non-corner samples of the L. The Winslow step (\subref {fig:l-sq-winslow}) produces a valid-looking L-shape mesh but with one slightly inverted element ($\min I = -0.019$, shown in red) near one of those six vertices that had to develop a sharp corner from a straight reference neighborhood.\relax }{figure.caption.21}{}}
-\newlabel{fig:l-ci-input}{{12a}{19}{Clean input.\relax }{figure.caption.23}{}}
-\newlabel{sub@fig:l-ci-input}{{a}{19}{Clean input.\relax }{figure.caption.23}{}}
-\newlabel{fig:l-ci-tutte}{{12b}{19}{Tutte (circle).\relax }{figure.caption.23}{}}
-\newlabel{sub@fig:l-ci-tutte}{{b}{19}{Tutte (circle).\relax }{figure.caption.23}{}}
-\newlabel{fig:l-ci-opt}{{12c}{19}{Shape-opt.\relax }{figure.caption.23}{}}
-\newlabel{sub@fig:l-ci-opt}{{c}{19}{Shape-opt.\relax }{figure.caption.23}{}}
-\newlabel{fig:l-ci-winslow}{{12d}{19}{Winslow.\relax }{figure.caption.23}{}}
-\newlabel{sub@fig:l-ci-winslow}{{d}{19}{Winslow.\relax }{figure.caption.23}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces L-shape pipeline with unit-disk target. The six L-corners are marked in red; proportional-arc Tutte (\subref  {fig:l-ci-tutte}) places them around the circle at positions proportional to their L-perimeter arc-length. No artificial corner alignment; the Winslow output (\subref  {fig:l-ci-winslow}) is valid ($\min I = 0.17$, $\max \eta = 4.29$) and more than $2.5\times $ better in $\max \eta $ than the square-target output of Figure\nobreakspace  {}\ref {fig:l-square-pipeline}.\relax }}{19}{figure.caption.23}\protected@file@percent }
-\newlabel{fig:l-circle-pipeline}{{12}{19}{L-shape pipeline with unit-disk target. The six L-corners are marked in red; proportional-arc Tutte (\subref {fig:l-ci-tutte}) places them around the circle at positions proportional to their L-perimeter arc-length. No artificial corner alignment; the Winslow output (\subref {fig:l-ci-winslow}) is valid ($\min I = 0.17$, $\max \eta = 4.29$) and more than $2.5\times $ better in $\max \eta $ than the square-target output of Figure~\ref {fig:l-square-pipeline}.\relax }{figure.caption.23}{}}
-\@writefile{toc}{\contentsline {paragraph}{Aside: what happens if we let boundary nodes slide?}{20}{section*.24}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {2.6}How to Present to Persson}{20}{subsection.2.6}\protected@file@percent }
-\newlabel{sec:tutte-present}{{2.6}{20}{How to Present to Persson}{subsection.2.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Unit-disk target.}{19}{section*.22}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Aside: what happens if we let boundary nodes slide?}{19}{section*.24}\protected@file@percent }
+\newlabel{fig:l-ci-input}{{12a}{20}{Clean input.\relax }{figure.caption.23}{}}
+\newlabel{sub@fig:l-ci-input}{{a}{20}{Clean input.\relax }{figure.caption.23}{}}
+\newlabel{fig:l-ci-tutte}{{12b}{20}{Tutte (circle).\relax }{figure.caption.23}{}}
+\newlabel{sub@fig:l-ci-tutte}{{b}{20}{Tutte (circle).\relax }{figure.caption.23}{}}
+\newlabel{fig:l-ci-opt}{{12c}{20}{Shape-opt.\relax }{figure.caption.23}{}}
+\newlabel{sub@fig:l-ci-opt}{{c}{20}{Shape-opt.\relax }{figure.caption.23}{}}
+\newlabel{fig:l-ci-winslow}{{12d}{20}{Winslow.\relax }{figure.caption.23}{}}
+\newlabel{sub@fig:l-ci-winslow}{{d}{20}{Winslow.\relax }{figure.caption.23}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {12}{\ignorespaces L-shape pipeline with unit-disk target. The six L-corners are marked in red; proportional-arc Tutte (\subref  {fig:l-ci-tutte}) places them around the circle at positions proportional to their L-perimeter arc-length. No artificial corner alignment; the Winslow output (\subref  {fig:l-ci-winslow}) is valid ($\min I = 0.17$, $\max \eta = 4.29$) and more than $2.5\times $ better in $\max \eta $ than the square-target output of Figure\nobreakspace  {}\ref {fig:l-square-pipeline}.\relax }}{20}{figure.caption.23}\protected@file@percent }
+\newlabel{fig:l-circle-pipeline}{{12}{20}{L-shape pipeline with unit-disk target. The six L-corners are marked in red; proportional-arc Tutte (\subref {fig:l-ci-tutte}) places them around the circle at positions proportional to their L-perimeter arc-length. No artificial corner alignment; the Winslow output (\subref {fig:l-ci-winslow}) is valid ($\min I = 0.17$, $\max \eta = 4.29$) and more than $2.5\times $ better in $\max \eta $ than the square-target output of Figure~\ref {fig:l-square-pipeline}.\relax }{figure.caption.23}{}}
+\@writefile{toc}{\contentsline {paragraph}{Stadium ((B) helps).}{20}{section*.25}\protected@file@percent }
+\newlabel{fig:stadium-cmp-tutte}{{13a}{21}{Tutte (disk).\relax }{figure.caption.26}{}}
+\newlabel{sub@fig:stadium-cmp-tutte}{{a}{21}{Tutte (disk).\relax }{figure.caption.26}{}}
+\newlabel{fig:stadium-cmp-opt-pinned}{{13b}{21}{(A) pinned shape-opt.\relax }{figure.caption.26}{}}
+\newlabel{sub@fig:stadium-cmp-opt-pinned}{{b}{21}{(A) pinned shape-opt.\relax }{figure.caption.26}{}}
+\newlabel{fig:stadium-cmp-opt-slide}{{13c}{21}{(B) slid shape-opt.\relax }{figure.caption.26}{}}
+\newlabel{sub@fig:stadium-cmp-opt-slide}{{c}{21}{(B) slid shape-opt.\relax }{figure.caption.26}{}}
+\newlabel{fig:stadium-cmp-win-pinned}{{13d}{21}{(A) pinned Winslow.\relax }{figure.caption.26}{}}
+\newlabel{sub@fig:stadium-cmp-win-pinned}{{d}{21}{(A) pinned Winslow.\relax }{figure.caption.26}{}}
+\newlabel{fig:stadium-cmp-win-slide}{{13e}{21}{(B) slid-disk Winslow.\relax }{figure.caption.26}{}}
+\newlabel{sub@fig:stadium-cmp-win-slide}{{e}{21}{(B) slid-disk Winslow.\relax }{figure.caption.26}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {13}{\ignorespaces Configurations\nobreakspace  {}(A) and\nobreakspace  {}(B) on the convex stadium of Section\nobreakspace  {}\ref {sec:tutte-ex-stadium}. Row\nobreakspace  {}1: the proportional-arc Tutte disk (\subref  {fig:stadium-cmp-tutte}), shared input to both paths. Row\nobreakspace  {}2: shape optimization on the disk---(A) pins every boundary vertex (\subref  {fig:stadium-cmp-opt-pinned}); (B) pins eight evenly-spaced anchors and lets the remaining boundary vertices slide along the unit circle (\subref  {fig:stadium-cmp-opt-slide}). Rows\nobreakspace  {}3--4: pinned Winslow on the physical stadium---(A) uses the original stadium boundary as Dirichlet data (\subref  {fig:stadium-cmp-win-pinned}); (B) uses proportional-arc-pulled-back stadium positions derived from the slid disk (\subref  {fig:stadium-cmp-win-slide}). The slid-disk redistribution piles boundary density toward the curved end caps, but the smooth convex geometry has no corner for that density to compress into, so element shape in (B) stays good across the whole mesh.\relax }}{21}{figure.caption.26}\protected@file@percent }
+\newlabel{fig:stadium-ab-pipeline}{{13}{21}{Configurations~(A) and~(B) on the convex stadium of Section~\ref {sec:tutte-ex-stadium}. Row~1: the proportional-arc Tutte disk (\subref {fig:stadium-cmp-tutte}), shared input to both paths. Row~2: shape optimization on the disk---(A) pins every boundary vertex (\subref {fig:stadium-cmp-opt-pinned}); (B) pins eight evenly-spaced anchors and lets the remaining boundary vertices slide along the unit circle (\subref {fig:stadium-cmp-opt-slide}). Rows~3--4: pinned Winslow on the physical stadium---(A) uses the original stadium boundary as Dirichlet data (\subref {fig:stadium-cmp-win-pinned}); (B) uses proportional-arc-pulled-back stadium positions derived from the slid disk (\subref {fig:stadium-cmp-win-slide}). The slid-disk redistribution piles boundary density toward the curved end caps, but the smooth convex geometry has no corner for that density to compress into, so element shape in (B) stays good across the whole mesh.\relax }{figure.caption.26}{}}
+\@writefile{toc}{\contentsline {paragraph}{L-shape ((B) fails).}{22}{section*.27}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Moral and outlook.}{22}{section*.29}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{\numberline {2.5.6}Example 6: comb (cooperative reference shape)}{22}{subsubsection.2.5.6}\protected@file@percent }
+\newlabel{sec:tutte-ex-comb}{{2.5.6}{22}{Example 6: comb (cooperative reference shape)}{subsubsection.2.5.6}{}}
+\@writefile{toc}{\contentsline {paragraph}{Geometry and meshing.}{22}{section*.30}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Tutte to a kinder reference: the dome.}{22}{section*.31}\protected@file@percent }
+\newlabel{fig:l-cmp-tutte}{{14a}{23}{Tutte (disk).\relax }{figure.caption.28}{}}
+\newlabel{sub@fig:l-cmp-tutte}{{a}{23}{Tutte (disk).\relax }{figure.caption.28}{}}
+\newlabel{fig:l-cmp-opt-pinned}{{14b}{23}{(A) pinned shape-opt.\relax }{figure.caption.28}{}}
+\newlabel{sub@fig:l-cmp-opt-pinned}{{b}{23}{(A) pinned shape-opt.\relax }{figure.caption.28}{}}
+\newlabel{fig:l-cmp-opt-slide}{{14c}{23}{(B) slid shape-opt.\relax }{figure.caption.28}{}}
+\newlabel{sub@fig:l-cmp-opt-slide}{{c}{23}{(B) slid shape-opt.\relax }{figure.caption.28}{}}
+\newlabel{fig:l-cmp-win-pinned}{{14d}{23}{(A) pinned Winslow.\relax }{figure.caption.28}{}}
+\newlabel{sub@fig:l-cmp-win-pinned}{{d}{23}{(A) pinned Winslow.\relax }{figure.caption.28}{}}
+\newlabel{fig:l-cmp-win-slide}{{14e}{23}{(B) slid-disk Winslow.\relax }{figure.caption.28}{}}
+\newlabel{sub@fig:l-cmp-win-slide}{{e}{23}{(B) slid-disk Winslow.\relax }{figure.caption.28}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {14}{\ignorespaces Configurations\nobreakspace  {}(A) and\nobreakspace  {}(B) on the L-shape with the unit-disk target. Row\nobreakspace  {}1: the proportional-arc Tutte disk (\subref  {fig:l-cmp-tutte}), shared input to both paths. Row\nobreakspace  {}2: shape optimization on the disk---(A) pins all boundary vertices at their Tutte positions (\subref  {fig:l-cmp-opt-pinned}); (B) pins only the six L-corners and lets the remaining boundary vertices slide tangentially along the unit circle (\subref  {fig:l-cmp-opt-slide}), so shape-opt redistributes boundary spacing and creates two clumps of small reference triangles next to L-corners. Row\nobreakspace  {}3: pinned Winslow on the physical L---(A) uses the original L-shape boundary as Dirichlet data (\subref  {fig:l-cmp-win-pinned}); (B) uses proportional-arc-pulled-back L-shape positions derived from the slid disk (\subref  {fig:l-cmp-win-slide}). Unlike the stadium (Figure\nobreakspace  {}\ref {fig:stadium-ab-pipeline}), the L-shape's corners give the disk-side clumping in (\subref  {fig:l-cmp-opt-slide}) somewhere to compress into on the physical side, producing a tight cluster of near-degenerate elements at the corresponding L-corners in (\subref  {fig:l-cmp-win-slide}).\relax }}{23}{figure.caption.28}\protected@file@percent }
+\newlabel{fig:l-ab-pipeline}{{14}{23}{Configurations~(A) and~(B) on the L-shape with the unit-disk target. Row~1: the proportional-arc Tutte disk (\subref {fig:l-cmp-tutte}), shared input to both paths. Row~2: shape optimization on the disk---(A) pins all boundary vertices at their Tutte positions (\subref {fig:l-cmp-opt-pinned}); (B) pins only the six L-corners and lets the remaining boundary vertices slide tangentially along the unit circle (\subref {fig:l-cmp-opt-slide}), so shape-opt redistributes boundary spacing and creates two clumps of small reference triangles next to L-corners. Row~3: pinned Winslow on the physical L---(A) uses the original L-shape boundary as Dirichlet data (\subref {fig:l-cmp-win-pinned}); (B) uses proportional-arc-pulled-back L-shape positions derived from the slid disk (\subref {fig:l-cmp-win-slide}). Unlike the stadium (Figure~\ref {fig:stadium-ab-pipeline}), the L-shape's corners give the disk-side clumping in (\subref {fig:l-cmp-opt-slide}) somewhere to compress into on the physical side, producing a tight cluster of near-degenerate elements at the corresponding L-corners in (\subref {fig:l-cmp-win-slide}).\relax }{figure.caption.28}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {15}{\ignorespaces Boundary correspondence between the comb (left) and the dome reference (right). Same color = same edge. The bottom and two short sides of the comb (gray) map to the same straight segments of the dome rectangle. Each tooth (blue, orange, yellow) maps to a contiguous arc of the dome cap; the gaps and margins (light gray) get the small angular allotments their physical arc lengths warrant. Mapping is isometric by arc length; the arc-length-matching constraint determines the cap height $b \approx 0.79$.\relax }}{24}{figure.caption.32}\protected@file@percent }
+\newlabel{fig:combdome-preview}{{15}{24}{Boundary correspondence between the comb (left) and the dome reference (right). Same color = same edge. The bottom and two short sides of the comb (gray) map to the same straight segments of the dome rectangle. Each tooth (blue, orange, yellow) maps to a contiguous arc of the dome cap; the gaps and margins (light gray) get the small angular allotments their physical arc lengths warrant. Mapping is isometric by arc length; the arc-length-matching constraint determines the cap height $b \approx 0.79$.\relax }{figure.caption.32}{}}
+\@writefile{toc}{\contentsline {paragraph}{Why the dome Tutte clumps along the cap (\subref  {fig:combdome-tutte}).}{24}{section*.34}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why shape-opt does not fix it (\subref  {fig:combdome-opt}).}{24}{section*.35}\protected@file@percent }
+\newlabel{fig:combdome-clean}{{16a}{25}{Clean comb input mesh.\relax }{figure.caption.33}{}}
+\newlabel{sub@fig:combdome-clean}{{a}{25}{Clean comb input mesh.\relax }{figure.caption.33}{}}
+\newlabel{fig:combdome-tutte}{{16b}{25}{Tutte to dome.\relax }{figure.caption.33}{}}
+\newlabel{sub@fig:combdome-tutte}{{b}{25}{Tutte to dome.\relax }{figure.caption.33}{}}
+\newlabel{fig:combdome-opt}{{16c}{25}{Shape-optimized on dome (interior only).\relax }{figure.caption.33}{}}
+\newlabel{sub@fig:combdome-opt}{{c}{25}{Shape-optimized on dome (interior only).\relax }{figure.caption.33}{}}
+\newlabel{fig:combdome-winslow-tutte}{{16d}{25}{Direct Winslow from raw Tutte.\relax }{figure.caption.33}{}}
+\newlabel{sub@fig:combdome-winslow-tutte}{{d}{25}{Direct Winslow from raw Tutte.\relax }{figure.caption.33}{}}
+\newlabel{fig:combdome-winslow-opt}{{16e}{25}{Direct Winslow from optimized Tutte.\relax }{figure.caption.33}{}}
+\newlabel{sub@fig:combdome-winslow-opt}{{e}{25}{Direct Winslow from optimized Tutte.\relax }{figure.caption.33}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {16}{\ignorespaces Comb pipeline with the dome reference. Top (\subref  {fig:combdome-clean}): clean comb input. Middle row: the raw Tutte embedding to the dome (\subref  {fig:combdome-tutte}) and the shape-optimized version with dome boundary pinned (\subref  {fig:combdome-opt}). Bottom row: direct (one-shot, no $\beta $-homotopy) Winslow back to the comb, started from the raw Tutte (\subref  {fig:combdome-winslow-tutte}) versus from the shape-optimized mesh (\subref  {fig:combdome-winslow-opt}). The raw-Tutte start produces the only output without inverted elements; the optimized-Tutte start produces a worse final mesh, indicating that the optimizer's local improvements on the dome reference are not aligned with the Winslow energy on the comb and degrade the physical pullback.\relax }}{25}{figure.caption.33}\protected@file@percent }
+\newlabel{fig:combdome-pipeline}{{16}{25}{Comb pipeline with the dome reference. Top (\subref {fig:combdome-clean}): clean comb input. Middle row: the raw Tutte embedding to the dome (\subref {fig:combdome-tutte}) and the shape-optimized version with dome boundary pinned (\subref {fig:combdome-opt}). Bottom row: direct (one-shot, no $\beta $-homotopy) Winslow back to the comb, started from the raw Tutte (\subref {fig:combdome-winslow-tutte}) versus from the shape-optimized mesh (\subref {fig:combdome-winslow-opt}). The raw-Tutte start produces the only output without inverted elements; the optimized-Tutte start produces a worse final mesh, indicating that the optimizer's local improvements on the dome reference are not aligned with the Winslow energy on the comb and degrade the physical pullback.\relax }{figure.caption.33}{}}
 \bibstyle{plain}
 \bibdata{refs}
 \bibcite{fortunato2016high}{1}
 \bibcite{liu1994relationship}{2}
 \bibcite{shi2023local}{3}
-\gdef \@abspage@last{23}
+\@writefile{toc}{\contentsline {paragraph}{Why direct Winslow from raw Tutte leaves slivers at the gap walls (\subref  {fig:combdome-winslow-tutte}).}{26}{section*.36}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Why optimized-Tutte $\to $ Winslow inverts (\subref  {fig:combdome-winslow-opt}).}{26}{section*.37}\protected@file@percent }
+\@writefile{toc}{\contentsline {paragraph}{Verdict.}{26}{section*.38}\protected@file@percent }
+\gdef \@abspage@last{26}

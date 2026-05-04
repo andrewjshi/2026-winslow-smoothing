@@ -81,7 +81,7 @@ xlim([0.60 0.90]); ylim([0.55 0.75]);
 title('Zoom on tooth 1: vertices 17, 20 form a 2-cut');
 set(gcf, 'Position', [100 100 800 500]);
 
-figdir = 'figures/comb_tangled';
+figdir = 'figures/comb';
 exportgraphics(gcf, fullfile(figdir, 'cut_diagnostic_zoom.png'), 'Resolution', 200);
 
 % Full view

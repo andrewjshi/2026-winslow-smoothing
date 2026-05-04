@@ -9,8 +9,8 @@ margin      = 0.10;   % horizontal margin at each end
 tooth_w     = 0.12;
 gap_w       = 0.08;
 n_teeth     = 4;
-n_per_side  = 3;      % boundary points per side-length unit of 0.1
-n_interior  = 60;
+n_per_side  = 3;      % yields density 30 per unit length (matches comb.m)
+n_interior  = 400;
 
 % --- Build corner list (CCW) --------------------------------------------
 C = [0, 0; W, 0; W, H_base];
@@ -62,7 +62,7 @@ tri = dt.ConnectivityList(in, :);
 fprintf('Elements: %d\n', size(tri, 1));
 
 % --- Plot ----------------------------------------------------------------
-figdir = 'figures/comb_tangled';
+figdir = 'figures/comb';
 if ~exist(figdir, 'dir'), mkdir(figdir); end
 
 figure(1); clf;

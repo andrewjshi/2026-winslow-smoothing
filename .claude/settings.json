@@ -1,0 +1,23 @@
+{
+  "_comment": "Broad allowlist for this research repo. Added 2026-04-25 at the user's explicit request to reduce permission prompts on routine actions (file edits, build/render tools, MATLAB scripts).",
+  "permissions": {
+    "allow": [
+      "Edit",
+      "Write",
+      "Bash(matlab:*)",
+      "Bash(/Applications/MATLAB_R2025a.app/bin/matlab:*)",
+      "Bash(pdflatex:*)",
+      "Bash(latexmk:*)",
+      "Bash(bibtex:*)",
+      "Bash(gs:*)",
+      "Bash(mkdir:*)",
+      "Bash(rm:*)",
+      "Bash(cp:*)",
+      "Bash(mv:*)",
+      "Bash(touch:*)",
+      "Bash(pkill:*)",
+      "Bash(awk:*)",
+      "Bash(python3:*)"
+    ]
+  }
+}
